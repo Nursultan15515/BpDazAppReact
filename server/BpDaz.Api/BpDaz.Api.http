@@ -1,0 +1,63 @@
+@BpDaz.Api_HostAddress = http://localhost:5087
+
+GET {{BpDaz.Api_HostAddress}}/health
+Accept: text/plain
+
+###
+
+GET {{BpDaz.Api_HostAddress}}/api/me
+Accept: application/json
+
+###
+
+# mode: All | InBuilding | Left
+GET {{BpDaz.Api_HostAddress}}/api/requests?mode=All
+Accept: application/json
+
+###
+
+GET {{BpDaz.Api_HostAddress}}/api/requests?onlyMine=true&dateFrom=2026-08-01&dateTo=2026-09-30
+Accept: application/json
+
+###
+
+GET {{BpDaz.Api_HostAddress}}/api/requests/1001
+Accept: application/json
+
+###
+
+POST {{BpDaz.Api_HostAddress}}/api/requests
+Content-Type: application/json
+
+{
+  "iin": "870514300123",
+  "lastname": "Оспанов",
+  "firstname": "Ерлан",
+  "middleName": "Кайратович",
+  "organization": "ТОО «Астана Групп»",
+  "mobilePhone": "+7 701 234 56 78",
+  "date": "2026-09-10",
+  "timeFrom": "10:00",
+  "timeTo": "12:00",
+  "hostPersonId": 1,
+  "placeId": 1,
+  "place": "312",
+  "hostPhone": "22-15",
+  "purpose": "Совещание"
+}
+
+###
+
+DELETE {{BpDaz.Api_HostAddress}}/api/requests/1001
+
+###
+
+GET {{BpDaz.Api_HostAddress}}/api/dicts/persons?search=ер
+Accept: application/json
+
+###
+
+GET {{BpDaz.Api_HostAddress}}/api/dicts/buildings
+Accept: application/json
+
+###

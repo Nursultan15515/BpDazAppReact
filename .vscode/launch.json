@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "BpDaz.Api (C#)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "api:build",
+      "program": "${workspaceFolder}/server/BpDaz.Api/bin/Debug/net10.0/BpDaz.Api.dll",
+      "cwd": "${workspaceFolder}/server/BpDaz.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5087;https://localhost:7211"
+      }
+    },
+    {
+      "name": "BpDaz.Web (Vite server)",
+      "type": "pwa-node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/client",
+      "runtimeExecutable": "${env:NVM_SYMLINK}\\npm.cmd",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "env": {
+        "PATH": "C:\\nvm4w\\nodejs;${env:PATH}"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "serverReadyAction": {
+        "action": "startDebugging",
+        "pattern": "Local:\\s+http://",
+        "name": "BpDaz.Web (Chrome)"
+      }
+    },
+    {
+      "name": "BpDaz.Web (Chrome)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/client/src",
+      "runtimeArgs": [
+        "--auth-server-whitelist=*localhost*",
+        "--auth-negotiate-delegate-whitelist=*localhost*"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "BpDaz Full Stack (F5)",
+      "configurations": [
+        "BpDaz.Api (C#)",
+        "BpDaz.Web (Vite server)"
+      ]
+    }
+  ]
+}

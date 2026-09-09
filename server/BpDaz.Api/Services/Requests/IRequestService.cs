@@ -1,0 +1,23 @@
+using BpDaz.Api.Dto;
+
+namespace BpDaz.Api.Services.Requests;
+
+public interface IRequestService
+{
+    Task<IReadOnlyList<RequestListItem>> GetListAsync(
+        RequestFilterMode mode,
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        bool onlyMine,
+        CancellationToken ct);
+
+    Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct);
+
+    /// <summary>
+    /// Создаёт заявку. Если посетитель в чёрном списке, заявка не создаётся
+    /// и возвращается результат с VisitorBlacklisted = true.
+    /// </summary>
+    Task<CreateRequestResult> CreateAsync(CreateRequestForm form, CancellationToken ct);
+
+    Task<bool> DeleteAsync(int id, CancellationToken ct);
+}

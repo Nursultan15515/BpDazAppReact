@@ -1,0 +1,51 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "api:build",
+      "type": "shell",
+      "command": "dotnet build server/BpDaz.Api/BpDaz.Api.csproj",
+      "problemMatcher": "$msCompile",
+      "options": {
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/d", "/c"]
+        }
+      }
+    },
+    {
+      "label": "web:dev",
+      "type": "shell",
+      "command": "npm run dev -- --port 5173 --strictPort",
+      "options": {
+        "cwd": "${workspaceFolder}/client",
+        "shell": {
+          "executable": "cmd.exe",
+          "args": ["/d", "/c"]
+        }
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [
+          {
+            "kind": "file",
+            "regexp": "^(.*)a^",
+            "file": 1,
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "ROLLDOWN-VITE|VITE v|vite v",
+          "endsPattern": "(?:\\bLocal:|\\bLocal\\s*:|\\u279C\\s*Local:)\\s+http://(?:localhost|127\\.0\\.0\\.1):5173/"
+        }
+      }
+    }
+  ]
+}
