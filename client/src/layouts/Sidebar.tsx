@@ -15,7 +15,7 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMe } from '../app/meContext';
+import { useMe } from '../app/authContext';
 import { closeSidebar } from './utils';
 import AppUserProfile from './AppUserProfile';
 

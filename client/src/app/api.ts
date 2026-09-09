@@ -4,6 +4,10 @@ export type ApiError = {
 };
 
 export async function api<T>(url: string, options?: RequestInit): Promise<T> {
+  return apiFetch<T>(url, options, false);
+}
+
+async function apiFetch<T>(url: string, options: RequestInit | undefined, isRetry: boolean): Promise<T> {
   const res = await fetch(url, {
     credentials: "include",
     headers: {
@@ -25,11 +29,30 @@ export async function api<T>(url: string, options?: RequestInit): Promise<T> {
   }
 
   if (!res.ok) {
+    // Прозрачное обновление access-токена: один раз пробуем refresh и повторяем запрос.
+    const isAuthEndpoint = url.startsWith("/api/auth/") || url === "/api/me/auth-mode";
+    if (res.status === 401 && !isRetry && !isAuthEndpoint) {
+      const refreshed = await tryRefresh();
+      if (refreshed) return apiFetch<T>(url, options, true);
+    }
+
     const err: ApiError = { status: res.status, data };
     throw err;
   }
 
   return data as T;
+}
+
+async function tryRefresh(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 /** Универсальный helper для получения текста ошибки из ApiError или Error. */

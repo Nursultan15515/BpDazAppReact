@@ -9,6 +9,7 @@ import DialogContent from "@mui/joy/DialogContent";
 import DialogTitle from "@mui/joy/DialogTitle";
 import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
+import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
 import Modal from "@mui/joy/Modal";
@@ -16,7 +17,7 @@ import ModalClose from "@mui/joy/ModalClose";
 import ModalDialog from "@mui/joy/ModalDialog";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
-import { getUser, updateUser, type UserEditItem } from "../../app/users.api";
+import { getUser, setUserPassword, updateUser, type UserEditItem } from "../../app/users.api";
 import { useLoad } from "../../app/useLoad";
 import { SectionCard } from "../../components/SectionCard";
 
@@ -45,6 +46,7 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
 
   // Правки поверх загруженной карточки: пока их нет, показываем значения из ответа.
   const [edits, setEdits] = useState<Partial<UserEditItem>>({});
+  const [newPassword, setNewPassword] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
@@ -63,6 +65,10 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
     setSaveError(null);
 
     if (login === "" || accountName === "") return;
+    if (newPassword !== "" && newPassword.length < 6) {
+      setSaveError(t("users.passwordTooShort"));
+      return;
+    }
 
     setSaving(true);
     try {
@@ -74,6 +80,10 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
         accountName,
         isAdmin: value.isAdmin ?? false,
       });
+
+      // Пароль меняется отдельным запросом: пустое поле — значит не трогаем.
+      if (newPassword !== "") await setUserPassword(userId, newPassword);
+
       onSaved();
     } catch (e) {
       setSaveError(getErrorMessage(e));
@@ -130,6 +140,17 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
               onChange={(e) => set("isAdmin", e.target.checked)}
               sx={{ alignSelf: "end", pb: 1 }}
             />
+
+            <FormControl size="sm">
+              <FormLabel>{t("users.newPassword")}</FormLabel>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+              <FormHelperText>{t("users.newPasswordHint")}</FormHelperText>
+            </FormControl>
           </SectionCard>
         )}
       </DialogContent>

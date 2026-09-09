@@ -1,10 +1,14 @@
 using BpDaz.Api.Dto;
 using BpDaz.Api.Services.Persons;
+using BpDaz.Api.Infrastructure.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BpDaz.Api.Controllers;
 
 [ApiController]
+// Справочники и чёрный список в BpDazApp были доступны только администратору.
+[Authorize(Roles = AppRoles.Admin)]
 [Route("api/[controller]")]
 public class PersonsController(IPersonService persons) : ControllerBase
 {

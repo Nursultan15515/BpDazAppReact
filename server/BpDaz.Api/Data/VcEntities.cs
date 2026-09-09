@@ -18,6 +18,8 @@ public partial class VcEntities : DbContext
 
     public virtual DbSet<Department> Departments { get; set; }
 
+    public virtual DbSet<FailedLogonAttempt> FailedLogonAttempts { get; set; }
+
     public virtual DbSet<Person> Persons { get; set; }
 
     public virtual DbSet<Place> Places { get; set; }
@@ -124,6 +126,14 @@ public partial class VcEntities : DbContext
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)
                 .HasConstraintName("FK_Departments_Departments");
+        });
+
+        modelBuilder.Entity<FailedLogonAttempt>(entity =>
+        {
+            entity.Property(e => e.FailedLogonDate)
+                .HasDefaultValueSql("(getdate())", "DF_FailedLogonAttempts_FailedLogonDate")
+                .HasColumnType("smalldatetime");
+            entity.Property(e => e.Login).HasMaxLength(50);
         });
 
         modelBuilder.Entity<Person>(entity =>

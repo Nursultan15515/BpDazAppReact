@@ -154,7 +154,10 @@
     "editTitle": "User No. {{id}}",
     "sectionMain": "User details",
     "isAdmin": "Administrator",
-    "save": "Save"
+    "save": "Save",
+    "newPassword": "New password",
+    "newPasswordHint": "Leave empty to keep the current one",
+    "passwordTooShort": "Password must be at least 6 characters"
   },
   "blacklist": {
     "title": "Blacklist",
@@ -168,5 +171,22 @@
     "remove": "Remove from blacklist",
     "removeTitle": "Remove entry No. {{id}} from the blacklist?",
     "removeText": "The visitor can be invited again. The entry stays in history."
+  },
+  "login": {
+    "title": "Sign in",
+    "login": "Login",
+    "password": "Password",
+    "submit": "Sign in",
+    "logout": "Sign out",
+    "fillBoth": "Enter login and password",
+    "windowsOnly": "The site is configured for domain authentication — password sign-in is disabled."
+  },
+  "link": {
+    "title": "Link your account",
+    "login": "Pass office login",
+    "submit": "Link",
+    "fillLogin": "Enter your login",
+    "loginHint": "The login you are registered under",
+    "description": "Account {{account}} is not linked to a pass office user yet. Enter your login to finish setup."
   }
 }

@@ -42,3 +42,10 @@ export function getUser(id: number): Promise<UserEditItem> {
 export function updateUser(id: number, form: UserEditForm): Promise<void> {
   return api<void>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(form) });
 }
+
+export function setUserPassword(id: number, password: string): Promise<void> {
+  return api<void>(`/api/users/${id}/password`, {
+    method: "PUT",
+    body: JSON.stringify({ password }),
+  });
+}

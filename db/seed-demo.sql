@@ -1,6 +1,9 @@
 /*
     Демоданные для локальной разработки.
 
+    Учётные записи: erzhanov (администратор) и abdrakhmanova (обычный пользователь),
+    пароль у обоих — Test123!
+
     ВНИМАНИЕ: скрипт сначала ОЧИЩАЕТ таблицы, которые заполняет
     (Visits, RequestDeleteInfo, Requests, Visitors, Users2, Users, Persons,
     Places, Positions, Departments, Companies). Запускать только на локальной
@@ -102,11 +105,15 @@ VALUES
     (2, N'abdrakhmanova', N'', 2, 1, GETDATE(), 0, 0, 0, 0, 1, 0);
 SET IDENTITY_INSERT dbo.Users OFF;
 
+-- Пароль у обоих демо-пользователей: Test123!
+-- BCrypt-хеш зафиксирован строкой, чтобы сид не зависел от кода приложения.
+DECLARE @demoPasswordHash nvarchar(255) = N'$2a$11$EYf/eTLv4N6cg0JCexeZIOSwcarq7neXpz.RPOpIr7BTCeAjk.Bie';
+
 SET IDENTITY_INSERT dbo.Users2 ON;
-INSERT INTO dbo.Users2 (Id, UserId, AccountName, IsAdmin)
+INSERT INTO dbo.Users2 (Id, UserId, AccountName, IsAdmin, PasswordHash, PasswordUpdatedDate)
 VALUES
-    (1, 1, N'DEV\erzhanov', 1),
-    (2, 2, N'DEV\abdrakhmanova', 0);
+    (1, 1, N'DEV\erzhanov',      1, @demoPasswordHash, GETDATE()),
+    (2, 2, N'DEV\abdrakhmanova', 0, @demoPasswordHash, GETDATE());
 SET IDENTITY_INSERT dbo.Users2 OFF;
 
 INSERT INTO dbo.UserRoles (UserID, RoleID) VALUES (1, 1), (2, 4);
