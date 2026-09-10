@@ -12,6 +12,7 @@ import { ModalBody } from "../../components/ModalBody";
 import { ModalFooter } from "../../components/ModalFooter";
 import { ModalHeader } from "../../components/ModalHeader";
 import { ModalShell } from "../../components/ModalShell";
+import { CardWidth } from "../../components/modalSizes";
 import { SectionCard, SectionRow } from "../../components/SectionCard";
 
 interface Props {
@@ -45,6 +46,11 @@ const PhotoWidth = 160;
  * Фото посетителя, снятое на посту при выдаче карты. Пустой photoId означает,
  * что снимка нет, — тогда запрос не отправляем вовсе. Ошибку загрузки тоже
  * показываем заглушкой: файл может лежать на диске, а не в таблице.
+ *
+ * В оригинале снимок стоял в col-md-2 внутри секции, но там поля были
+ * инпутами во всю ширину. У нас значения короткие, и снимок, растянутый на
+ * три ряда сетки, раздвигал их дырами — поэтому ставим его рядом со всей
+ * секцией, как в VisitorDetailModal у PassBureau.
  */
 function VisitorPhoto({ requestId, photoId }: { requestId: number; photoId: string | null }) {
   const { t } = useTranslation();
@@ -55,6 +61,9 @@ function VisitorPhoto({ requestId, photoId }: { requestId: number; photoId: stri
       sx={{
         width: PhotoWidth,
         aspectRatio: "3 / 4",
+        flexShrink: 0,
+        // По центру, а не по нижнему краю: иначе сверху справа зияет пустой угол.
+        alignSelf: "center",
         borderRadius: 2,
         overflow: "hidden",
         border: "1px solid",
@@ -65,8 +74,6 @@ function VisitorPhoto({ requestId, photoId }: { requestId: number; photoId: stri
         alignItems: "center",
         justifyContent: "center",
         gap: 0.5,
-        flexShrink: 0,
-        alignSelf: "flex-end",
       }}
     >
       {photoId && !failed ? (
@@ -111,16 +118,11 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
   const error = current?.error ?? null;
   const loading = requestId !== null && current === null;
 
-  const fullname = details
-    ? [details.lastname, details.firstname, details.middleName].filter(Boolean).join(" ")
-    : "";
-
   return (
-    <ModalShell open={requestId !== null} onClose={onClose}>
+    <ModalShell open={requestId !== null} onClose={onClose} width={CardWidth}>
       <ModalHeader
         icon={<AssignmentOutlinedIcon />}
         title={t("details.title", { id: requestId ?? "" })}
-        subtitle={details ? t(`status.${details.status}`) : undefined}
         busy={loading}
       />
 
@@ -135,36 +137,44 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
 
         {details && (
           <>
-            {/* Данные посетителя и его фото стоят рядом — вёрстка из VisitorDetailModal
-                PassBureau. Строки внутри идут в столбик, поэтому раскладываем их в две
-                колонки: иначе карточка вытягивается вдвое и уезжает под скролл. */}
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
-                gap: 1.5,
-              }}
-            >
-              <SectionCard title={t("details.visitorSection")}>
-                <SectionRow label={t("details.fullname")} value={fullname} span={2} />
-                <SectionRow label={t("details.iin")} value={details.iin} />
-                <SectionRow label={t("details.mobilePhone")} value={details.mobilePhone} />
-                <SectionRow label={t("details.organization")} value={details.organization} span={2} />
-              </SectionCard>
+            {/* Три секции и пропорции колонок повторяют окно «Дополнительная
+                информация о пропуске» из BpDazApp (ViewRequest.cshtml), оформление —
+                из PassBureau. Числа span — это col-md-N оригинала. */}
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "stretch" }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                {/* Пропорции оригинала (10+2, 8+4) держались на рамках инпутов;
+                    у нас значения короткие, и разные отступы читаются ступеньками.
+                    Поэтому здесь одна пара колонок на все ряды. */}
+                <SectionCard title={t("create.visitorSection")}>
+                  <SectionRow label={t("create.iin")} value={details.iin} />
+                  <SectionRow label={t("details.createdAt")} value={formatMoment(details.date)} />
+                  <SectionRow label={t("create.lastname")} value={details.lastname} />
+                  <SectionRow label={t("create.firstname")} value={details.firstname} />
+                  <SectionRow label={t("create.middleName")} value={details.middleName} />
+                  <SectionRow label={t("details.card")} value={details.cardNumber} />
+                  <SectionRow label={t("create.organization")} value={details.organization} />
+                  <SectionRow label={t("create.mobilePhone")} value={details.mobilePhone} />
+                </SectionCard>
+              </Box>
 
               <VisitorPhoto key={details.id} requestId={details.id} photoId={details.photoId} />
             </Box>
 
-            <SectionCard title={t("details.visitSection")}>
-              <SectionRow label={t("details.day")} value={formatDay(details.day)} />
-              <SectionRow label={t("details.time")} value={`${details.timeFrom} - ${details.timeTo}`} />
-              <SectionRow label={t("details.host")} value={details.hostPersonName} />
-              <SectionRow label={t("details.hostPhone")} value={details.hostPhone} />
-              <SectionRow label={t("details.building")} value={details.hostPlace} />
-              <SectionRow label={t("details.place")} value={details.place} />
-              <SectionRow label={t("details.card")} value={details.cardNumber} />
-              <SectionRow label={t("details.createdAt")} value={formatMoment(details.date)} />
-              <SectionRow label={t("details.purpose")} value={details.objective} span={2} />
+            <SectionCard title={t("create.passCardSection")} columns={12}>
+              <SectionRow label={t("details.status")} value={t(`status.${details.status}`)} span={3} />
+              <SectionRow label={t("details.day")} value={formatDay(details.day)} span={3} />
+              <SectionRow label={t("details.timeFrom")} value={details.timeFrom} span={3} />
+              <SectionRow label={t("details.timeTo")} value={details.timeTo} span={3} />
+              <SectionRow label={t("create.purpose")} value={details.objective} span={12} />
+            </SectionCard>
+
+            <SectionCard title={t("create.hostSection")} columns={12}>
+              <SectionRow label={t("create.hostFio")} value={details.hostPersonName} span={4} />
+              {/* Кабинета в оригинальном окне просмотра не было, но он есть в форме
+                  создания и нужен на посту — оставляем, как в нашей AddRequest. */}
+              <SectionRow label={t("create.place")} value={details.place} span={2} />
+              <SectionRow label={t("create.address")} value={details.hostPlace} span={3} />
+              <SectionRow label={t("create.hostPhone")} value={details.hostPhone} span={3} />
             </SectionCard>
           </>
         )}

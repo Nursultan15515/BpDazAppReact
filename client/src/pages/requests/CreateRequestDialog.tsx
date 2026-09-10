@@ -30,6 +30,7 @@ import { ModalBody } from "../../components/ModalBody";
 import { ModalFooter } from "../../components/ModalFooter";
 import { ModalHeader } from "../../components/ModalHeader";
 import { ModalShell } from "../../components/ModalShell";
+import { FormWidth } from "../../components/modalSizes";
 import { PhoneInput } from "../../components/PhoneInput";
 import { SectionCard } from "../../components/SectionCard";
 import { isoDate, nowTime } from "./helpers";
@@ -45,9 +46,6 @@ const SearchDelayMs = 2000;
 
 /** Поиск принимающего в оригинале стартовал от двух символов. */
 const MinHostQueryLength = 2;
-
-// Ширина повторяет бутстраповский .container из BpDazApp: 750 / 970 / 1170.
-const FormWidth = { xs: "95vw", sm: 750, md: 970, lg: 1170 };
 
 export function CreateRequestDialog({ open, onClose, onCreated }: Props) {
   return (
