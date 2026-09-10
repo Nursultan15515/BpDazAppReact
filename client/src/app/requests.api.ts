@@ -55,7 +55,7 @@ export interface CreateRequestForm {
   firstname: string;
   middleName?: string;
   organization?: string;
-  mobilePhone?: string;
+  mobilePhone: string;
   date: string;
   timeFrom: string;
   timeTo: string;
@@ -63,7 +63,7 @@ export interface CreateRequestForm {
   placeId: number;
   place?: string;
   hostPhone?: string;
-  purpose?: string;
+  purpose: string;
 }
 
 export interface RequestListParams {

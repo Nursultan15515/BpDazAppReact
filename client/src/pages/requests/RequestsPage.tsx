@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
+import Snackbar from "@mui/joy/Snackbar";
 import Typography from "@mui/joy/Typography";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import {
@@ -51,6 +53,8 @@ export default function RequestsPage({ onlyMine = false }: Props) {
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  // Всплывающее подтверждение — замена iaoAlert из BpDazApp.
+  const [toast, setToast] = useState<string | null>(null);
 
   const reload = useCallback(() => setReloadToken((token) => token + 1), []);
 
@@ -120,6 +124,7 @@ export default function RequestsPage({ onlyMine = false }: Props) {
         onClose={() => setDeleteId(null)}
         onDeleted={() => {
           setDeleteId(null);
+          setToast(t("requests.deleted"));
           reload();
         }}
       />
@@ -129,9 +134,22 @@ export default function RequestsPage({ onlyMine = false }: Props) {
         onClose={() => setCreateOpen(false)}
         onCreated={() => {
           setCreateOpen(false);
+          setToast(t("requests.created"));
           reload();
         }}
       />
+
+      <Snackbar
+        open={toast !== null}
+        color="success"
+        variant="soft"
+        autoHideDuration={3000}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        startDecorator={<CheckCircleRoundedIcon />}
+        onClose={() => setToast(null)}
+      >
+        {toast}
+      </Snackbar>
     </Box>
   );
 }

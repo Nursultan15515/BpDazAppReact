@@ -168,7 +168,7 @@ function AddPersonForm({ onClose, onCreated }: Omit<Props, "open">) {
           </FormControl>
 
           <FormControl size="sm" error={buildingError}>
-            <FormLabel>{t("create.building")}</FormLabel>
+            <FormLabel>{t("persons.colBuilding")}</FormLabel>
             <Select
               value={buildingId}
               onChange={(_, value) => setBuildingId(value)}
@@ -225,7 +225,7 @@ function AddPersonForm({ onClose, onCreated }: Omit<Props, "open">) {
       </DialogContent>
       <Divider />
       <DialogActions>
-        <Button onClick={handleSubmit} loading={saving}>{t("create.submit")}</Button>
+        <Button onClick={handleSubmit} loading={saving}>{t("persons.submit")}</Button>
         <Button variant="plain" color="neutral" onClick={onClose} disabled={saving}>
           {t("common.cancel")}
         </Button>

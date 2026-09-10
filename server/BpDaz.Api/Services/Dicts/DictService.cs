@@ -1,12 +1,27 @@
 using BpDaz.Api.Data;
 using BpDaz.Api.Dto;
+using BpDaz.Api.Infrastructure.CurrentUser;
 using Microsoft.EntityFrameworkCore;
 
 namespace BpDaz.Api.Services.Dicts;
 
-public class DictService(VcEntities db) : IDictService
+public class DictService(VcEntities db, ICurrentUser currentUser) : IDictService
 {
     private const int MaxSuggestions = 20;
+
+    public Task<PersonOption?> GetCurrentPersonAsync(CancellationToken ct) =>
+        db.Persons.AsNoTracking()
+            .Where(p => p.Id == currentUser.PersonId)
+            .Select(p => new PersonOption(
+                p.Id,
+                p.Fio ?? "",
+                p.Position == null ? "" : p.Position.Title,
+                p.Department.Fullname ?? p.Department.Title,
+                p.PlaceNavigation == null ? "" : (p.PlaceNavigation.Name ?? p.PlaceNavigation.Title),
+                p.PlaceId ?? 0,
+                p.Place,
+                p.PhoneInternal))
+            .FirstOrDefaultAsync(ct)!;
 
     public async Task<IReadOnlyList<PersonOption>> SearchPersonsAsync(string? search, CancellationToken ct)
     {

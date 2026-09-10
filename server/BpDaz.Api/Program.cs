@@ -10,6 +10,7 @@ using BpDaz.Api.Services.Dicts;
 using BpDaz.Api.Services.Persons;
 using BpDaz.Api.Services.Requests;
 using BpDaz.Api.Services.Users;
+using BpDaz.Api.Services.Visitors;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Negotiate;
@@ -139,6 +140,17 @@ builder.Services.AddScoped<IDictService, DictService>();
 builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBlackListService, BlackListService>();
+
+// ─── ГБДФЛ ───────────────────────────────────────────────────────────────────
+var gbdfl = builder.Configuration.GetSection("Gbdfl");
+builder.Services.Configure<GbdflOptions>(gbdfl);
+builder.Services.AddHttpClient<IVisitorService, VisitorService>(client =>
+        client.Timeout = TimeSpan.FromSeconds(gbdfl.GetValue("TimeoutSeconds", 30)))
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+    {
+        ConnectTimeout = TimeSpan.FromSeconds(gbdfl.GetValue("ConnectTimeoutSeconds", 5)),
+        UseProxy = gbdfl.GetValue("UseProxy", false),
+    });
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(options =>

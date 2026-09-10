@@ -80,8 +80,9 @@ public record CreateRequestForm
     [StringLength(200)]
     public string? Organization { get; init; }
 
-    [StringLength(50)]
-    public string? MobilePhone { get; init; }
+    // Телефон и цель визита в форме BpDazApp были обязательными.
+    [Required(ErrorMessage = "Укажите мобильный телефон."), StringLength(50)]
+    public string MobilePhone { get; init; } = "";
 
     [Required]
     public DateOnly Date { get; init; }
@@ -105,6 +106,6 @@ public record CreateRequestForm
     [StringLength(50)]
     public string? HostPhone { get; init; }
 
-    [StringLength(500)]
-    public string? Purpose { get; init; }
+    [Required(ErrorMessage = "Укажите цель визита."), StringLength(500, MinimumLength = 1)]
+    public string Purpose { get; init; } = "";
 }

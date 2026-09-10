@@ -54,7 +54,9 @@
     "delete": "Delete request",
     "deleteTitle": "Delete request No. {{id}}?",
     "deleteText": "The request will disappear from the list. This cannot be undone.",
-    "deleteError": "Failed to delete the request"
+    "deleteError": "Failed to delete the request",
+    "created": "Request created",
+    "deleted": "Request deleted"
   },
   "status": {
     "Default": "—",
@@ -86,8 +88,7 @@
   },
   "create": {
     "title": "New request",
-    "visitorSection": "Visitor details",
-    "visitSection": "Visit details",
+    "visitorSection": "Visitor information",
     "iin": "IIN",
     "iinHint": "12 digits",
     "lastname": "Last name",
@@ -95,17 +96,23 @@
     "middleName": "Middle name",
     "organization": "Organization",
     "mobilePhone": "Mobile phone",
-    "date": "Visit date",
-    "timeFrom": "Time from",
-    "timeTo": "Time to",
+    "timeFrom": "Valid from",
+    "timeTo": "To",
     "host": "Host",
     "hostPlaceholder": "Start typing the last name",
-    "building": "Building",
     "place": "Room",
-    "hostPhone": "Host phone",
+    "hostPhone": "Phone",
     "purpose": "Purpose of the visit",
-    "submit": "Create",
-    "saveError": "Failed to create the request"
+    "submit": "Create request",
+    "saveError": "Failed to create the request",
+    "iinSearch": "Search",
+    "iinFoundGbdfl": "Data received from GBDFL.",
+    "iinFoundLocal": "Visitor found in the database.",
+    "passCardSection": "Single pass information",
+    "hostSection": "Host side",
+    "term": "Request validity",
+    "hostFio": "Full name",
+    "address": "Address"
   },
   "common": {
     "cancel": "Cancel",
@@ -137,7 +144,8 @@
     "phone": "Phone",
     "isUserOfSystem": "Pass office user",
     "login": "Login",
-    "accountName": "Login (AD)"
+    "accountName": "Login (AD)",
+    "submit": "Add"
   },
   "users": {
     "title": "Users",

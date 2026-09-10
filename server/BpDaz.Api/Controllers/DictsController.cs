@@ -13,6 +13,11 @@ public class DictsController(IDictService dicts) : ControllerBase
         [FromQuery] string? search, CancellationToken ct)
         => Ok(await dicts.SearchPersonsAsync(search, ct));
 
+    /// <summary>Принимающий по умолчанию — текущий пользователь.</summary>
+    [HttpGet("persons/current")]
+    public async Task<ActionResult<PersonOption>> GetCurrentPerson(CancellationToken ct) =>
+        await dicts.GetCurrentPersonAsync(ct) is { } person ? Ok(person) : NoContent();
+
     [HttpGet("buildings")]
     public async Task<ActionResult<IReadOnlyList<BuildingOption>>> GetBuildings(CancellationToken ct)
         => Ok(await dicts.GetBuildingsAsync(ct));

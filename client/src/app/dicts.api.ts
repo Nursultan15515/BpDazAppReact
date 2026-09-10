@@ -20,6 +20,11 @@ export function searchPersons(search: string): Promise<PersonOption[]> {
   return api<PersonOption[]>(`/api/dicts/persons?search=${encodeURIComponent(search)}`);
 }
 
+/** Принимающий по умолчанию — карточка текущего пользователя. */
+export function getCurrentPerson(): Promise<PersonOption | null> {
+  return api<PersonOption | null>("/api/dicts/persons/current");
+}
+
 export function getBuildings(): Promise<BuildingOption[]> {
   return api<BuildingOption[]>("/api/dicts/buildings");
 }

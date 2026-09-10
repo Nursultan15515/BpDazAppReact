@@ -5,10 +5,15 @@ import Box from "@mui/joy/Box";
 
 interface Props {
   title: string;
+  /**
+   * Количество колонок сетки. 12 позволяет повторить пропорции
+   * бутстраповской вёрстки BpDazApp (col-md-4 → span 4 и т.д.).
+   */
+  columns?: number;
   children: ReactNode;
 }
 
-export function SectionCard({ title, children }: Props) {
+export function SectionCard({ title, columns = 2, children }: Props) {
   return (
     <Sheet variant="outlined" sx={{ borderRadius: "sm", p: 2 }}>
       <Typography level="title-sm" sx={{ mb: 1.5 }}>
@@ -17,7 +22,7 @@ export function SectionCard({ title, children }: Props) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+          gridTemplateColumns: { xs: "1fr", sm: `repeat(${columns}, 1fr)` },
           gap: 1.5,
         }}
       >
