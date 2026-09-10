@@ -10,6 +10,8 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { useTranslation } from "react-i18next";
 import { getBlackList, type BlackListItem } from "../../app/blacklist.api";
 import { useLoad } from "../../app/useLoad";
+import { usePageState } from "../../app/usePageState";
+import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
 import { TablePanel } from "../../components/TablePanel";
 import { AddBlackListDialog } from "./AddBlackListDialog";
@@ -26,9 +28,13 @@ export default function BlackListPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [removeId, setRemoveId] = useState<number | null>(null);
 
-  const fetcher = useCallback(() => getBlackList(applied), [applied]);
-  const { data, error, loading, loadedOnce } = useLoad(`${applied}|${reloadToken}`, fetcher);
-  const rows = data ?? noRows;
+  const { page, pageSize, setPage, changePageSize, firstPage, stepBackIfEmptied } = usePageState();
+
+  const fetcher = useCallback(
+    () => getBlackList(applied, page, pageSize), [applied, page, pageSize]);
+  const { data, error, loading, loadedOnce } = useLoad(
+    `${applied}|${page}|${pageSize}|${reloadToken}`, fetcher);
+  const rows = data?.items ?? noRows;
 
   const reload = () => setReloadToken((token) => token + 1);
 
@@ -44,6 +50,7 @@ export default function BlackListPage() {
         onSearchChange={setSearch}
         onApply={() => {
           setApplied(search);
+          firstPage();
           reload();
         }}
         onAdd={() => setAddOpen(true)}
@@ -113,6 +120,15 @@ export default function BlackListPage() {
         </TableBody>
       </TablePanel>
 
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={data?.totalCount ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={setPage}
+        onPageSizeChange={changePageSize}
+      />
+
       <AddBlackListDialog
         open={addOpen}
         onClose={() => setAddOpen(false)}
@@ -127,6 +143,7 @@ export default function BlackListPage() {
         onClose={() => setRemoveId(null)}
         onRemoved={() => {
           setRemoveId(null);
+          stepBackIfEmptied(rows.length);
           reload();
         }}
       />

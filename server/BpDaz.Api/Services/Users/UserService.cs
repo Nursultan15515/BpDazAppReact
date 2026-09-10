@@ -7,8 +7,10 @@ namespace BpDaz.Api.Services.Users;
 
 public class UserService(VcEntities db) : IUserService
 {
-    public async Task<IReadOnlyList<UserListItem>> GetListAsync(string? search, CancellationToken ct)
+    public async Task<PagedResult<UserListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct)
     {
+        var (currentPage, size) = Paging.Normalize(page, pageSize);
         var query = (search ?? "").Trim();
 
         var users = db.Users.AsNoTracking().AsQueryable();
@@ -21,12 +23,16 @@ public class UserService(VcEntities db) : IUserService
                 || db.Users2s.Any(x => x.UserId == u.Id && x.AccountName.Contains(query)));
         }
 
-        // Фильтр и сортировка — по сущности, проекция последней: ORDER BY поверх
+        var totalCount = await users.CountAsync(ct);
+
+        // Фильтр, сортировка и срез — по сущности, проекция последней: ORDER BY поверх
         // готового DTO EF Core не переводит.
         // У Users2 нет внешнего ключа на Users, поэтому её поля берём подзапросом.
-        return await users
+        var items = await users
             .OrderBy(u => u.Person == null ? u.Login : u.Person.Fio)
             .ThenBy(u => u.Login)
+            .Skip((currentPage - 1) * size)
+            .Take(size)
             .Select(u => new UserListItem(
                 u.Id,
                 u.PersonId,
@@ -38,6 +44,8 @@ public class UserService(VcEntities db) : IUserService
                 u.Person == null ? null : u.Person.Phone,
                 db.Users2s.Where(x => x.UserId == u.Id).Select(x => x.IsAdmin).FirstOrDefault()))
             .ToListAsync(ct);
+
+        return new PagedResult<UserListItem>(items, totalCount, currentPage, size);
     }
 
     public async Task<UserEditItem?> GetForEditAsync(int id, CancellationToken ct) =>

@@ -4,7 +4,8 @@ namespace BpDaz.Api.Services.Persons;
 
 public interface IPersonService
 {
-    Task<IReadOnlyList<PersonListItem>> GetListAsync(string? search, CancellationToken ct);
+    Task<PagedResult<PersonListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct);
 
     Task<SaveResult> CreateAsync(CreatePersonForm form, CancellationToken ct);
 }

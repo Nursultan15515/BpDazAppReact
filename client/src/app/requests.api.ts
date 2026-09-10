@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { appendPaging, type PagedResult } from "./paging";
 
 /** Совпадает с RequestStatus на бэкенде. */
 export type RequestStatus =
@@ -71,17 +72,22 @@ export interface RequestListParams {
   dateFrom: string;
   dateTo: string;
   onlyMine: boolean;
+  search: string;
+  page: number;
+  pageSize: number;
 }
 
-export function getRequests(params: RequestListParams): Promise<RequestListItem[]> {
+export function getRequests(params: RequestListParams): Promise<PagedResult<RequestListItem>> {
   const query = new URLSearchParams({
     mode: params.mode,
     dateFrom: params.dateFrom,
     dateTo: params.dateTo,
     onlyMine: String(params.onlyMine),
+    search: params.search,
   });
+  appendPaging(query, params.page, params.pageSize);
 
-  return api<RequestListItem[]>(`/api/requests?${query}`);
+  return api<PagedResult<RequestListItem>>(`/api/requests?${query}`);
 }
 
 export function getRequest(id: number): Promise<RequestDetails> {

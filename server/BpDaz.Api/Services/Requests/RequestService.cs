@@ -31,13 +31,18 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         public string? CardNumber { get; init; }
     }
 
-    public async Task<IReadOnlyList<RequestListItem>> GetListAsync(
+    public async Task<PagedResult<RequestListItem>> GetListAsync(
         RequestFilterMode mode,
         DateOnly? dateFrom,
         DateOnly? dateTo,
         bool onlyMine,
+        string? search,
+        int page,
+        int pageSize,
         CancellationToken ct)
     {
+        var (currentPage, size) = Paging.Normalize(page, pageSize);
+
         var from = dateFrom?.ToDateTime(TimeOnly.MinValue)
             ?? DateTime.Today.AddDays(-DefaultPeriodDays);
         var to = dateTo?.ToDateTime(new TimeOnly(23, 59, 59))
@@ -56,11 +61,29 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
             _ => query,
         };
 
+        // Поиск ищет по всей выборке, а не по видимой странице, поэтому он на сервере.
+        var text = (search ?? "").Trim();
+        if (text != "")
+        {
+            query = query.Where(r =>
+                (r.Visitor != null && r.Visitor.Fio.Contains(text))
+                || (r.Visitor != null && (r.Visitor.Iin ?? "").Contains(text))
+                || (r.HostDepartment ?? "").Contains(text)
+                || (r.HostPerson != null && (r.HostPerson.Fio ?? "").Contains(text))
+                || (r.Maker != null && (r.Maker.Fio ?? "").Contains(text)));
+        }
+
+        // Счёт по отфильтрованной выборке — до среза страницы.
+        var totalCount = await query.CountAsync(ct);
+
         var rows = await query
             .OrderByDescending(r => r.Request.Id)
+            .Skip((currentPage - 1) * size)
+            .Take(size)
             .ToListAsync(ct);
 
-        return rows.Select(ToListItem).ToList();
+        return new PagedResult<RequestListItem>(
+            [.. rows.Select(ToListItem)], totalCount, currentPage, size);
     }
 
     public async Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct)

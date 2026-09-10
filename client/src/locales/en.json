@@ -114,6 +114,14 @@
     "hostFio": "Full name",
     "address": "Address"
   },
+  "pagination": {
+    "rowsPerPage": "Rows per page",
+    "range": "{{first}}–{{last}} of {{total}}",
+    "jump": "Go to",
+    "jumpPlaceholder": "#",
+    "prev": "Previous page",
+    "next": "Next page"
+  },
   "common": {
     "cancel": "Cancel",
     "close": "Close",

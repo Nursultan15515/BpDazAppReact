@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { appendPaging, type PagedResult } from "./paging";
 
 export interface UserListItem {
   id: number;
@@ -31,8 +32,13 @@ export interface UserEditForm {
   isAdmin: boolean;
 }
 
-export function getUsers(search: string): Promise<UserListItem[]> {
-  return api<UserListItem[]>(`/api/users?search=${encodeURIComponent(search)}`);
+export function getUsers(
+  search: string, page: number, pageSize: number
+): Promise<PagedResult<UserListItem>> {
+  const query = new URLSearchParams({ search });
+  appendPaging(query, page, pageSize);
+
+  return api<PagedResult<UserListItem>>(`/api/users?${query}`);
 }
 
 export function getUser(id: number): Promise<UserEditItem> {

@@ -4,7 +4,8 @@ namespace BpDaz.Api.Services.BlackList;
 
 public interface IBlackListService
 {
-    Task<IReadOnlyList<BlackListItem>> GetListAsync(string? search, CancellationToken ct);
+    Task<PagedResult<BlackListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct);
 
     Task<BlackListItem> AddAsync(AddBlackListForm form, CancellationToken ct);
 

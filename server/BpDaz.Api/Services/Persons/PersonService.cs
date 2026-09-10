@@ -10,8 +10,10 @@ public class PersonService(VcEntities db) : IPersonService
     /// <summary>Роль обычного пользователя бюро пропусков — как в BpDazApp.</summary>
     private const int DefaultRoleId = 4;
 
-    public async Task<IReadOnlyList<PersonListItem>> GetListAsync(string? search, CancellationToken ct)
+    public async Task<PagedResult<PersonListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct)
     {
+        var (currentPage, size) = Paging.Normalize(page, pageSize);
         var query = (search ?? "").Trim();
 
         var persons = db.Persons.AsNoTracking().Where(p => p.Status == 1);
@@ -24,9 +26,13 @@ public class PersonService(VcEntities db) : IPersonService
                 || (p.Position != null && p.Position.Title.Contains(query)));
         }
 
-        // Сортировка до проекции — иначе EF попытается перевести ORDER BY по DTO.
-        return await persons
+        var totalCount = await persons.CountAsync(ct);
+
+        // Сортировка и срез до проекции — иначе EF попытается перевести ORDER BY по DTO.
+        var items = await persons
             .OrderBy(p => p.Fio)
+            .Skip((currentPage - 1) * size)
+            .Take(size)
             .Select(p => new PersonListItem(
                 p.Id,
                 p.Fio ?? "",
@@ -42,6 +48,8 @@ public class PersonService(VcEntities db) : IPersonService
                 p.Email,
                 db.Users.Where(u => u.PersonId == p.Id).Select(u => u.Login).FirstOrDefault()))
             .ToListAsync(ct);
+
+        return new PagedResult<PersonListItem>(items, totalCount, currentPage, size);
     }
 
     public async Task<SaveResult> CreateAsync(CreatePersonForm form, CancellationToken ct)

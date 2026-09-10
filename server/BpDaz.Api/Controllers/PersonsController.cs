@@ -13,9 +13,12 @@ namespace BpDaz.Api.Controllers;
 public class PersonsController(IPersonService persons) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<PersonListItem>>> GetList(
-        [FromQuery] string? search, CancellationToken ct)
-        => Ok(await persons.GetListAsync(search, ct));
+    public async Task<ActionResult<PagedResult<PersonListItem>>> GetList(
+        CancellationToken ct,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = Paging.DefaultPageSize)
+        => Ok(await persons.GetListAsync(search, page, pageSize, ct));
 
     [HttpPost]
     public async Task<IActionResult> Create(CreatePersonForm form, CancellationToken ct)

@@ -8,15 +8,18 @@ namespace BpDaz.Api.Controllers;
 [Route("api/[controller]")]
 public class RequestsController(IRequestService requests) : ControllerBase
 {
-    /// <summary>Список заявок. Без дат отдаёт последние три дня.</summary>
+    /// <summary>Страница списка заявок. Без дат отдаёт последние три дня.</summary>
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<RequestListItem>>> GetList(
+    public async Task<ActionResult<PagedResult<RequestListItem>>> GetList(
         CancellationToken ct,
         [FromQuery] RequestFilterMode mode = RequestFilterMode.All,
         [FromQuery] DateOnly? dateFrom = null,
         [FromQuery] DateOnly? dateTo = null,
-        [FromQuery] bool onlyMine = false)
-        => Ok(await requests.GetListAsync(mode, dateFrom, dateTo, onlyMine, ct));
+        [FromQuery] bool onlyMine = false,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = Paging.DefaultPageSize)
+        => Ok(await requests.GetListAsync(mode, dateFrom, dateTo, onlyMine, search, page, pageSize, ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<RequestDetails>> GetById(int id, CancellationToken ct) =>

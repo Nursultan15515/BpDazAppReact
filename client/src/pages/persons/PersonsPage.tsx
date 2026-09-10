@@ -7,6 +7,8 @@ import Typography from "@mui/joy/Typography";
 import { useTranslation } from "react-i18next";
 import { getPersons, type PersonListItem } from "../../app/persons.api";
 import { useLoad } from "../../app/useLoad";
+import { usePageState } from "../../app/usePageState";
+import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
 import { TablePanel } from "../../components/TablePanel";
 import { AddPersonDialog } from "./AddPersonDialog";
@@ -21,9 +23,13 @@ export default function PersonsPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
 
-  const fetcher = useCallback(() => getPersons(applied), [applied]);
-  const { data, error, loading, loadedOnce } = useLoad(`${applied}|${reloadToken}`, fetcher);
-  const rows = data ?? noRows;
+  const { page, pageSize, setPage, changePageSize, firstPage } = usePageState();
+
+  const fetcher = useCallback(
+    () => getPersons(applied, page, pageSize), [applied, page, pageSize]);
+  const { data, error, loading, loadedOnce } = useLoad(
+    `${applied}|${page}|${pageSize}|${reloadToken}`, fetcher);
+  const rows = data?.items ?? noRows;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 2, p: 2 }}>
@@ -37,6 +43,7 @@ export default function PersonsPage() {
         onSearchChange={setSearch}
         onApply={() => {
           setApplied(search);
+          firstPage();
           setReloadToken((token) => token + 1);
         }}
         onAdd={() => setAddOpen(true)}
@@ -99,6 +106,15 @@ export default function PersonsPage() {
           )}
         </TableBody>
       </TablePanel>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={data?.totalCount ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={setPage}
+        onPageSizeChange={changePageSize}
+      />
 
       <AddPersonDialog
         open={addOpen}

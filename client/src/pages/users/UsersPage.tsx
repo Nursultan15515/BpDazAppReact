@@ -11,6 +11,8 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import { useTranslation } from "react-i18next";
 import { getUsers, type UserListItem } from "../../app/users.api";
 import { useLoad } from "../../app/useLoad";
+import { usePageState } from "../../app/usePageState";
+import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
 import { TablePanel } from "../../components/TablePanel";
 import { EditUserDialog } from "./EditUserDialog";
@@ -25,9 +27,13 @@ export default function UsersPage() {
   const [reloadToken, setReloadToken] = useState(0);
   const [editId, setEditId] = useState<number | null>(null);
 
-  const fetcher = useCallback(() => getUsers(applied), [applied]);
-  const { data, error, loading, loadedOnce } = useLoad(`${applied}|${reloadToken}`, fetcher);
-  const rows = data ?? noRows;
+  const { page, pageSize, setPage, changePageSize, firstPage } = usePageState();
+
+  const fetcher = useCallback(
+    () => getUsers(applied, page, pageSize), [applied, page, pageSize]);
+  const { data, error, loading, loadedOnce } = useLoad(
+    `${applied}|${page}|${pageSize}|${reloadToken}`, fetcher);
+  const rows = data?.items ?? noRows;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 2, p: 2 }}>
@@ -40,6 +46,7 @@ export default function UsersPage() {
         onSearchChange={setSearch}
         onApply={() => {
           setApplied(search);
+          firstPage();
           setReloadToken((token) => token + 1);
         }}
       />
@@ -103,6 +110,15 @@ export default function UsersPage() {
           )}
         </TableBody>
       </TablePanel>
+
+      <Pagination
+        page={page}
+        pageSize={pageSize}
+        totalCount={data?.totalCount ?? 0}
+        totalPages={data?.totalPages ?? 1}
+        onPageChange={setPage}
+        onPageSizeChange={changePageSize}
+      />
 
       <EditUserDialog
         userId={editId}

@@ -8,8 +8,10 @@ namespace BpDaz.Api.Services.BlackList;
 
 public class BlackListService(VcEntities db, ICurrentUser currentUser) : IBlackListService
 {
-    public async Task<IReadOnlyList<BlackListItem>> GetListAsync(string? search, CancellationToken ct)
+    public async Task<PagedResult<BlackListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct)
     {
+        var (currentPage, size) = Paging.Normalize(page, pageSize);
         var query = (search ?? "").Trim();
 
         var entries = db.BlackListVisitors.AsNoTracking().Where(b => b.DeletedDate == null);
@@ -22,11 +24,15 @@ public class BlackListService(VcEntities db, ICurrentUser currentUser) : IBlackL
                 || (b.FirstName ?? "").Contains(query));
         }
 
-        // Фильтр и сортировка идут по сущности, проекция — последней: ORDER BY
+        var totalCount = await entries.CountAsync(ct);
+
+        // Фильтр, сортировка и срез идут по сущности, проекция — последней: ORDER BY
         // поверх готового DTO EF Core перевести не может.
         // Внешнего ключа BlackListVisitors → Users нет, поэтому автор берётся подзапросом.
-        return await entries
+        var items = await entries
             .OrderByDescending(b => b.Id)
+            .Skip((currentPage - 1) * size)
+            .Take(size)
             .Select(b => new BlackListItem(
                 b.Id,
                 b.Iin,
@@ -38,6 +44,8 @@ public class BlackListService(VcEntities db, ICurrentUser currentUser) : IBlackL
                     .Select(u => u.Person == null ? u.Login : (u.Person.Fio ?? u.Login))
                     .FirstOrDefault() ?? ""))
             .ToListAsync(ct);
+
+        return new PagedResult<BlackListItem>(items, totalCount, currentPage, size);
     }
 
     public async Task<BlackListItem> AddAsync(AddBlackListForm form, CancellationToken ct)

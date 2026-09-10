@@ -176,6 +176,39 @@ VALUES
     (1015, @today, DATEADD(hour,14,DATEADD(day, 3,@today)), DATEADD(hour,16,DATEADD(day, 3,@today)), 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, N'312', N'Настройка интеграции',     @today, 1, 0, 0, 0, 1, N'22-15', GETDATE());
 SET IDENTITY_INSERT dbo.Requests OFF;
 
+-- ─── Массовые заявки ─────────────────────────────────────────────────────────
+-- Пятнадцать заявок выше расписаны поимённо ради всех состояний. Этот блок
+-- добивает список до сотни с лишним строк, чтобы на демоданных была видна
+-- пагинация. Все они попадают в период по умолчанию — последние три дня.
+DECLARE @filler int = 120;
+
+;WITH numbers AS (
+    SELECT TOP (@filler) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_objects
+)
+INSERT INTO dbo.Requests
+    (Date, DateFrom, DateTo, NumOfVisits, HostCompanyID, HostDepartmentID, HostPersonID,
+     MakerID, SignerID, InitDepartmentID, VisitorID, VisitsToEnd, PlaceID, Place, Objective,
+     SignDate, Decision, StayCar, MoveDirection, IsRegistration, RequestType, HostPhone, LastUpdateDate)
+SELECT
+    DATEADD(day, -(f.n % 4) - 1, @today),
+    DATEADD(hour, 8 + (f.n % 9), DATEADD(day, -(f.n % 4), @today)),
+    DATEADD(hour, 10 + (f.n % 9), DATEADD(day, -(f.n % 4), @today)),
+    1, 1, p.DepartmentID, p.Id, 1, 1, p.DepartmentID, 1 + (f.n % 7),
+    -- каждая третья отработана (визит с входом и выходом), остальные без визита
+    CASE WHEN f.n % 3 = 0 THEN 0 ELSE 1 END,
+    p.PlaceID, p.Place,
+    CONCAT(CASE f.n % 5
+               WHEN 0 THEN N'Рабочая встреча'
+               WHEN 1 THEN N'Передача документов'
+               WHEN 2 THEN N'Техническое обслуживание'
+               WHEN 3 THEN N'Переговоры'
+               ELSE N'Согласование сметы'
+           END, N' №', f.n),
+    DATEADD(day, -(f.n % 4) - 1, @today), 1, 0, 0, 0, 1, p.PhoneInternal, GETDATE()
+FROM numbers f
+JOIN dbo.Persons p ON p.Id = 1 + (f.n % 6);
+
 -- ─── Визиты ──────────────────────────────────────────────────────────────────
 INSERT INTO dbo.Visits (RequestID, VisitorDateIn, DateExit, CardReadableNum, ValidFrom, ValidTo, CreateDate, VisitType)
 SELECT r.Id,
@@ -200,6 +233,16 @@ JOIN (VALUES
 INSERT INTO dbo.Visits (RequestID, VisitorDateIn, DateExit, CardReadableNum, ValidFrom, ValidTo, CreateDate, VisitType)
 SELECT r.Id, NULL, NULL, N'0010000012', r.DateFrom, r.DateTo, GETDATE(), 0
 FROM dbo.Requests r WHERE r.Id = 1012;
+
+-- визиты массовых заявок: только у отработанных, вход и выход проставлены
+INSERT INTO dbo.Visits (RequestID, VisitorDateIn, DateExit, CardReadableNum, ValidFrom, ValidTo, CreateDate, VisitType)
+SELECT r.Id,
+       DATEADD(minute, 5, r.DateFrom),
+       DATEADD(minute, 95, r.DateFrom),
+       CONCAT(N'002', RIGHT(CONCAT(N'0000000', r.Id), 7)),
+       r.DateFrom, r.DateTo, GETDATE(), 0
+FROM dbo.Requests r
+WHERE r.Id > 1015 AND r.VisitsToEnd = 0;
 
 COMMIT TRANSACTION;
 

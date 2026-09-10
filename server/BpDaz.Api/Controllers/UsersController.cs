@@ -19,9 +19,12 @@ public class UsersController(IUserService users, IAuthService auth) : Controller
         await auth.SetPasswordAsync(id, form.Password, ct) ? NoContent() : NotFound();
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<UserListItem>>> GetList(
-        [FromQuery] string? search, CancellationToken ct)
-        => Ok(await users.GetListAsync(search, ct));
+    public async Task<ActionResult<PagedResult<UserListItem>>> GetList(
+        CancellationToken ct,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = Paging.DefaultPageSize)
+        => Ok(await users.GetListAsync(search, page, pageSize, ct));
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserEditItem>> GetById(int id, CancellationToken ct) =>

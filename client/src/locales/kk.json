@@ -114,6 +114,14 @@
     "hostFio": "Аты-жөні",
     "address": "Мекенжай"
   },
+  "pagination": {
+    "rowsPerPage": "Беттегі жолдар",
+    "range": "{{total}} ішінен {{first}}–{{last}}",
+    "jump": "Өту",
+    "jumpPlaceholder": "№",
+    "prev": "Алдыңғы бет",
+    "next": "Келесі бет"
+  },
   "common": {
     "cancel": "Бас тарту",
     "close": "Жабу",

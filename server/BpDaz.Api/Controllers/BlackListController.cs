@@ -13,9 +13,12 @@ namespace BpDaz.Api.Controllers;
 public class BlackListController(IBlackListService blackList) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<BlackListItem>>> GetList(
-        [FromQuery] string? search, CancellationToken ct)
-        => Ok(await blackList.GetListAsync(search, ct));
+    public async Task<ActionResult<PagedResult<BlackListItem>>> GetList(
+        CancellationToken ct,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = Paging.DefaultPageSize)
+        => Ok(await blackList.GetListAsync(search, page, pageSize, ct));
 
     [HttpPost]
     public async Task<ActionResult<BlackListItem>> Add(AddBlackListForm form, CancellationToken ct)

@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { appendPaging, type PagedResult } from "./paging";
 
 export interface BlackListItem {
   id: number;
@@ -17,8 +18,13 @@ export interface AddBlackListForm {
   middleName?: string;
 }
 
-export function getBlackList(search: string): Promise<BlackListItem[]> {
-  return api<BlackListItem[]>(`/api/blacklist?search=${encodeURIComponent(search)}`);
+export function getBlackList(
+  search: string, page: number, pageSize: number
+): Promise<PagedResult<BlackListItem>> {
+  const query = new URLSearchParams({ search });
+  appendPaging(query, page, pageSize);
+
+  return api<PagedResult<BlackListItem>>(`/api/blacklist?${query}`);
 }
 
 export function addToBlackList(form: AddBlackListForm): Promise<BlackListItem> {

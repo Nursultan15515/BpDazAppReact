@@ -4,11 +4,14 @@ namespace BpDaz.Api.Services.Requests;
 
 public interface IRequestService
 {
-    Task<IReadOnlyList<RequestListItem>> GetListAsync(
+    Task<PagedResult<RequestListItem>> GetListAsync(
         RequestFilterMode mode,
         DateOnly? dateFrom,
         DateOnly? dateTo,
         bool onlyMine,
+        string? search,
+        int page,
+        int pageSize,
         CancellationToken ct);
 
     Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct);

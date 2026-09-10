@@ -4,7 +4,8 @@ namespace BpDaz.Api.Services.Users;
 
 public interface IUserService
 {
-    Task<IReadOnlyList<UserListItem>> GetListAsync(string? search, CancellationToken ct);
+    Task<PagedResult<UserListItem>> GetListAsync(
+        string? search, int page, int pageSize, CancellationToken ct);
 
     Task<UserEditItem?> GetForEditAsync(int id, CancellationToken ct);
 

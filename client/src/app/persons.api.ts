@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { appendPaging, type PagedResult } from "./paging";
 
 export interface PersonListItem {
   id: number;
@@ -32,8 +33,13 @@ export interface CreatePersonForm {
   accountName?: string;
 }
 
-export function getPersons(search: string): Promise<PersonListItem[]> {
-  return api<PersonListItem[]>(`/api/persons?search=${encodeURIComponent(search)}`);
+export function getPersons(
+  search: string, page: number, pageSize: number
+): Promise<PagedResult<PersonListItem>> {
+  const query = new URLSearchParams({ search });
+  appendPaging(query, page, pageSize);
+
+  return api<PagedResult<PersonListItem>>(`/api/persons?${query}`);
 }
 
 export function createPerson(form: CreatePersonForm): Promise<void> {

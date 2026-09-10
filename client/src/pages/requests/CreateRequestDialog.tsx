@@ -46,9 +46,12 @@ const SearchDelayMs = 2000;
 /** Поиск принимающего в оригинале стартовал от двух символов. */
 const MinHostQueryLength = 2;
 
+// Ширина повторяет бутстраповский .container из BpDazApp: 750 / 970 / 1170.
+const FormWidth = { xs: "95vw", sm: 750, md: 970, lg: 1170 };
+
 export function CreateRequestDialog({ open, onClose, onCreated }: Props) {
   return (
-    <ModalShell open={open} onClose={onClose} width={780}>
+    <ModalShell open={open} onClose={onClose} width={FormWidth}>
       {/* Содержимое размонтируется при закрытии, поэтому форма
           каждый раз открывается пустой без ручного сброса состояния. */}
       {open && <CreateRequestForm onClose={onClose} onCreated={onCreated} />}

@@ -114,6 +114,14 @@
     "hostFio": "ФИО",
     "address": "Адрес"
   },
+  "pagination": {
+    "rowsPerPage": "Строк на странице",
+    "range": "{{first}}–{{last}} из {{total}}",
+    "jump": "Перейти",
+    "jumpPlaceholder": "№",
+    "prev": "Предыдущая страница",
+    "next": "Следующая страница"
+  },
   "common": {
     "cancel": "Отмена",
     "close": "Закрыть",

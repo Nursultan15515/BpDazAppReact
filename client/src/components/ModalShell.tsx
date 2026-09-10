@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 import Modal from "@mui/joy/Modal";
 import ModalDialog from "@mui/joy/ModalDialog";
 
+/** Ширина: число (одинаковая на всех экранах) или значение по контрольным точкам. */
+type ModalWidth = number | Record<string, number | string>;
+
 interface Props {
   open: boolean;
   onClose: () => void;
-  /** Ширина на десктопе; на узких экранах окно всегда 95vw. */
-  width?: number;
+  width?: ModalWidth;
   children: ReactNode;
 }
 
@@ -20,7 +22,9 @@ export function ModalShell({ open, onClose, width = 680, children }: Props) {
       <ModalDialog
         layout="center"
         sx={{
-          width: { xs: "95vw", sm: width },
+          width: typeof width === "number" ? { xs: "95vw", sm: width } : width,
+          // Страховка: как бы ни была задана ширина, окно не вылезает за экран.
+          maxWidth: "95vw",
           maxHeight: "90vh",
           p: 0,
           overflow: "hidden",
