@@ -18,16 +18,16 @@ export function SectionCard({ title, columns = 2, children }: Props) {
   return (
     <Paper
       variant="outlined"
-      sx={{ p: 2.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}
+      sx={{ p: 2, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}
     >
-      <Typography level="title-md" sx={{ mb: 1.5 }}>
+      <Typography level="title-md" sx={{ mb: 1 }}>
         {title}
       </Typography>
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: { xs: "1fr", sm: `repeat(${columns}, 1fr)` },
-          gap: 1.5,
+          gap: 1.25,
         }}
       >
         {children}

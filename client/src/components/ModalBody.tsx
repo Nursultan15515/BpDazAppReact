@@ -9,7 +9,7 @@ export function ModalBody({ children }: { children: ReactNode }) {
         p: 3,
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        gap: 1.5,
         overflowY: "auto",
         minHeight: 0,
       }}

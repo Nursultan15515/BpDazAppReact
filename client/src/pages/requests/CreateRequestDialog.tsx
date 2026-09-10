@@ -5,12 +5,10 @@ import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import FormControl from "@mui/joy/FormControl";
-import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
 import Option from "@mui/joy/Option";
 import Select from "@mui/joy/Select";
-import Textarea from "@mui/joy/Textarea";
 import Typography from "@mui/joy/Typography";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
@@ -270,7 +268,6 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
               onChange={(e) => set("iin", e.target.value.replace(/\D/g, "").slice(0, 12))}
               placeholder="000000000000"
             />
-            <FormHelperText>{t("create.iinHint")}</FormHelperText>
           </FormControl>
 
           {/* Кнопка стоит отдельной колонкой рядом с ИИН; пустая подпись — для выравнивания. */}
@@ -350,11 +347,7 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
 
           <FormControl size="sm" error={purposeError} sx={{ gridColumn: { sm: "span 12" } }}>
             <FormLabel>{t("create.purpose")}</FormLabel>
-            <Textarea
-              minRows={2}
-              value={form.purpose}
-              onChange={(e) => set("purpose", e.target.value)}
-            />
+            <Input value={form.purpose} onChange={(e) => set("purpose", e.target.value)} />
           </FormControl>
         </SectionCard>
 
