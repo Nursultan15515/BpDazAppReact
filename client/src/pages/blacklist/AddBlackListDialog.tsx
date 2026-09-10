@@ -1,20 +1,18 @@
 import { useState } from "react";
 import Alert from "@mui/joy/Alert";
-import Button from "@mui/joy/Button";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
-import ModalDialog from "@mui/joy/ModalDialog";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import { addToBlackList } from "../../app/blacklist.api";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalGradient } from "../../components/modalGradients";
+import { ModalShell } from "../../components/ModalShell";
 import { SectionCard } from "../../components/SectionCard";
 
 interface Props {
@@ -27,9 +25,9 @@ const emptyForm = { iin: "", lastname: "", firstname: "", middleName: "" };
 
 export function AddBlackListDialog({ open, onClose, onCreated }: Props) {
   return (
-    <Modal open={open} onClose={onClose}>
-      <AddBlackListForm onClose={onClose} onCreated={onCreated} />
-    </Modal>
+    <ModalShell open={open} onClose={onClose} width={620}>
+      {open && <AddBlackListForm onClose={onClose} onCreated={onCreated} />}
+    </ModalShell>
   );
 }
 
@@ -72,11 +70,14 @@ function AddBlackListForm({ onClose, onCreated }: Omit<Props, "open">) {
   };
 
   return (
-    <ModalDialog sx={{ width: 620, maxWidth: "95vw" }}>
-      <ModalClose />
-      <DialogTitle>{t("blacklist.addTitle")}</DialogTitle>
-      <Divider />
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+    <>
+      <ModalHeader
+        icon={<BlockRoundedIcon />}
+        title={t("blacklist.addTitle")}
+        gradient={ModalGradient.danger}
+        busy={saving}
+      />
+      <ModalBody>
         {error && <Alert color="danger" variant="soft">{error}</Alert>}
 
         <SectionCard title={t("create.visitorSection")}>
@@ -105,16 +106,14 @@ function AddBlackListForm({ onClose, onCreated }: Omit<Props, "open">) {
             <Input value={form.middleName} onChange={(e) => set("middleName", e.target.value)} />
           </FormControl>
         </SectionCard>
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button color="danger" onClick={handleSubmit} loading={saving}>
-          {t("blacklist.add")}
-        </Button>
-        <Button variant="plain" color="neutral" onClick={onClose} disabled={saving}>
-          {t("common.cancel")}
-        </Button>
-      </DialogActions>
-    </ModalDialog>
+      </ModalBody>
+      <ModalFooter
+        onCancel={onClose}
+        onConfirm={handleSubmit}
+        confirmLabel={t("blacklist.add")}
+        confirmColor="danger"
+        loading={saving}
+      />
+    </>
   );
 }

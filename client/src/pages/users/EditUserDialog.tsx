@@ -1,24 +1,21 @@
 import { useCallback, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
 import Checkbox from "@mui/joy/Checkbox";
 import CircularProgress from "@mui/joy/CircularProgress";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
-import ModalDialog from "@mui/joy/ModalDialog";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import { getUser, setUserPassword, updateUser, type UserEditItem } from "../../app/users.api";
 import { useLoad } from "../../app/useLoad";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalShell } from "../../components/ModalShell";
 import { SectionCard } from "../../components/SectionCard";
 
 interface Props {
@@ -29,12 +26,9 @@ interface Props {
 
 export function EditUserDialog({ userId, onClose, onSaved }: Props) {
   return (
-    <Modal open={userId !== null} onClose={onClose}>
-      <ModalDialog sx={{ width: 620, maxWidth: "95vw" }}>
-        <ModalClose />
-        {userId !== null && <EditUserBody userId={userId} onClose={onClose} onSaved={onSaved} />}
-      </ModalDialog>
-    </Modal>
+    <ModalShell open={userId !== null} onClose={onClose} width={620}>
+      {userId !== null && <EditUserBody userId={userId} onClose={onClose} onSaved={onSaved} />}
+    </ModalShell>
   );
 }
 
@@ -94,9 +88,12 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
 
   return (
     <>
-      <DialogTitle>{t("users.editTitle", { id: userId })}</DialogTitle>
-      <Divider />
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+      <ModalHeader
+        icon={<ManageAccountsRoundedIcon />}
+        title={t("users.editTitle", { id: userId })}
+        busy={loading || saving}
+      />
+      <ModalBody>
         {loading && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
             <CircularProgress />
@@ -153,16 +150,14 @@ function EditUserBody({ userId, onClose, onSaved }: { userId: number } & Omit<Pr
             </FormControl>
           </SectionCard>
         )}
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button onClick={handleSubmit} loading={saving} disabled={!data}>
-          {t("users.save")}
-        </Button>
-        <Button variant="plain" color="neutral" onClick={onClose} disabled={saving}>
-          {t("common.cancel")}
-        </Button>
-      </DialogActions>
+      </ModalBody>
+      <ModalFooter
+        onCancel={onClose}
+        onConfirm={handleSubmit}
+        confirmLabel={t("users.save")}
+        loading={saving}
+        disabled={!data}
+      />
     </>
   );
 }

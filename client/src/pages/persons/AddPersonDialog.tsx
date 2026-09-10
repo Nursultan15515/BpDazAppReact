@@ -1,23 +1,20 @@
 import { useEffect, useState } from "react";
 import Alert from "@mui/joy/Alert";
-import Button from "@mui/joy/Button";
 import Checkbox from "@mui/joy/Checkbox";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
-import ModalDialog from "@mui/joy/ModalDialog";
 import Option from "@mui/joy/Option";
 import Select from "@mui/joy/Select";
+import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import { getBuildings, getDepartments, getPositions, type BuildingOption, type DictOption } from "../../app/dicts.api";
 import { createPerson } from "../../app/persons.api";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalShell } from "../../components/ModalShell";
 import { SectionCard } from "../../components/SectionCard";
 
 interface Props {
@@ -40,10 +37,10 @@ const emptyForm = {
 
 export function AddPersonDialog({ open, onClose, onCreated }: Props) {
   return (
-    <Modal open={open} onClose={onClose}>
-      {/* Joy Modal размонтирует содержимое при закрытии — форма каждый раз пустая. */}
-      <AddPersonForm onClose={onClose} onCreated={onCreated} />
-    </Modal>
+    <ModalShell open={open} onClose={onClose} width={760}>
+      {/* Содержимое размонтируется при закрытии — форма каждый раз пустая. */}
+      {open && <AddPersonForm onClose={onClose} onCreated={onCreated} />}
+    </ModalShell>
   );
 }
 
@@ -122,11 +119,9 @@ function AddPersonForm({ onClose, onCreated }: Omit<Props, "open">) {
   };
 
   return (
-    <ModalDialog sx={{ width: 760, maxWidth: "95vw", maxHeight: "90vh" }}>
-      <ModalClose />
-      <DialogTitle>{t("persons.addTitle")}</DialogTitle>
-      <Divider />
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+    <>
+      <ModalHeader icon={<PersonAddAlt1RoundedIcon />} title={t("persons.addTitle")} busy={saving} />
+      <ModalBody>
         {error && <Alert color="danger" variant="soft">{error}</Alert>}
 
         <SectionCard title={t("persons.sectionMain")}>
@@ -222,14 +217,13 @@ function AddPersonForm({ onClose, onCreated }: Omit<Props, "open">) {
             />
           </FormControl>
         </SectionCard>
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button onClick={handleSubmit} loading={saving}>{t("persons.submit")}</Button>
-        <Button variant="plain" color="neutral" onClick={onClose} disabled={saving}>
-          {t("common.cancel")}
-        </Button>
-      </DialogActions>
-    </ModalDialog>
+      </ModalBody>
+      <ModalFooter
+        onCancel={onClose}
+        onConfirm={handleSubmit}
+        confirmLabel={t("persons.submit")}
+        loading={saving}
+      />
+    </>
   );
 }

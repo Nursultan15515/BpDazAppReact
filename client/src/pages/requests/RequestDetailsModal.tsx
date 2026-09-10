@@ -1,22 +1,18 @@
 import { useEffect, useState } from "react";
+import { Paper } from "@mui/material";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import Chip from "@mui/joy/Chip";
 import CircularProgress from "@mui/joy/CircularProgress";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
-import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
-import ModalDialog from "@mui/joy/ModalDialog";
-import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import { getRequest, type RequestDetails } from "../../app/requests.api";
-import { statusColor } from "./helpers";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalShell } from "../../components/ModalShell";
+import { SectionRow } from "../../components/SectionCard";
 
 interface Props {
   requestId: number | null;
@@ -35,31 +31,15 @@ function formatDay(day: string): string {
   return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : day;
 }
 
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
-  const { t } = useTranslation();
-
-  return (
-    <Box>
-      <Typography level="body-xs" textColor="text.tertiary">{label}</Typography>
-      <Typography level="body-sm">{value || t("common.notSet")}</Typography>
-    </Box>
-  );
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Sheet variant="outlined" sx={{ borderRadius: "sm", p: 2 }}>
-      <Typography level="title-sm" sx={{ mb: 1.5 }}>{title}</Typography>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
-          gap: 1.5,
-        }}
-      >
-        {children}
-      </Box>
-    </Sheet>
+    <Paper
+      variant="outlined"
+      sx={{ p: 2.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}
+    >
+      <Typography level="title-md" sx={{ mb: 1 }}>{title}</Typography>
+      {children}
+    </Paper>
   );
 }
 
@@ -90,62 +70,48 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
     : "";
 
   return (
-    <Modal open={requestId !== null} onClose={onClose}>
-      <ModalDialog sx={{ width: 700, maxWidth: "95vw", maxHeight: "90vh" }}>
-        <ModalClose />
-        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {t("details.title", { id: requestId ?? "" })}
-          {details && (
-            <Chip size="sm" variant="soft" color={statusColor[details.status]}>
-              {t(`status.${details.status}`)}
-            </Chip>
-          )}
-        </DialogTitle>
-        <Divider />
-        <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress />
-            </Box>
-          )}
+    <ModalShell open={requestId !== null} onClose={onClose}>
+      <ModalHeader
+        icon={<AssignmentOutlinedIcon />}
+        title={t("details.title", { id: requestId ?? "" })}
+        subtitle={details ? t(`status.${details.status}`) : undefined}
+        busy={loading}
+      />
 
-          {error && <Alert color="danger" variant="soft">{t("details.loadError")}: {error}</Alert>}
+      <ModalBody>
+        {loading && (
+          <Box sx={{ display: "flex", justifyContent: "center", minHeight: 200, alignItems: "center" }}>
+            <CircularProgress />
+          </Box>
+        )}
 
-          {details && (
-            <>
-              <Section title={t("details.visitorSection")}>
-                <Field label={t("details.fullname")} value={fullname} />
-                <Field label={t("details.iin")} value={details.iin} />
-                <Field label={t("details.organization")} value={details.organization} />
-                <Field label={t("details.mobilePhone")} value={details.mobilePhone} />
-              </Section>
+        {error && <Alert color="danger" variant="soft">{t("details.loadError")}: {error}</Alert>}
 
-              <Section title={t("details.visitSection")}>
-                <Field label={t("details.day")} value={formatDay(details.day)} />
-                <Field label={t("details.time")} value={`${details.timeFrom} - ${details.timeTo}`} />
-                <Field label={t("details.host")} value={details.hostPersonName} />
-                <Field label={t("details.hostPhone")} value={details.hostPhone} />
-                <Field label={t("details.building")} value={details.hostPlace} />
-                <Field label={t("details.place")} value={details.place} />
-                <Field label={t("details.card")} value={details.cardNumber} />
-                <Field
-                  label={t("details.createdAt")}
-                  value={new Date(details.date).toLocaleString()}
-                />
-                <Box sx={{ gridColumn: { sm: "span 2" } }}>
-                  <Field label={t("details.purpose")} value={details.objective} />
-                </Box>
-              </Section>
-            </>
-          )}
-        </DialogContent>
-        <Divider />
-        <DialogActions>
-          <Button variant="plain" color="neutral" onClick={onClose}>
-            {t("common.close")}
-          </Button>
-        </DialogActions>
-      </ModalDialog>
-    </Modal>
+        {details && (
+          <>
+            <Section title={t("details.visitorSection")}>
+              <SectionRow label={t("details.fullname")} value={fullname} />
+              <SectionRow label={t("details.iin")} value={details.iin} />
+              <SectionRow label={t("details.organization")} value={details.organization} />
+              <SectionRow label={t("details.mobilePhone")} value={details.mobilePhone} />
+            </Section>
+
+            <Section title={t("details.visitSection")}>
+              <SectionRow label={t("details.day")} value={formatDay(details.day)} />
+              <SectionRow label={t("details.time")} value={`${details.timeFrom} - ${details.timeTo}`} />
+              <SectionRow label={t("details.host")} value={details.hostPersonName} />
+              <SectionRow label={t("details.hostPhone")} value={details.hostPhone} />
+              <SectionRow label={t("details.building")} value={details.hostPlace} />
+              <SectionRow label={t("details.place")} value={details.place} />
+              <SectionRow label={t("details.card")} value={details.cardNumber} />
+              <SectionRow label={t("details.createdAt")} value={new Date(details.date).toLocaleString()} />
+              <SectionRow label={t("details.purpose")} value={details.objective} />
+            </Section>
+          </>
+        )}
+      </ModalBody>
+
+      <ModalFooter onCancel={onClose} cancelLabel={t("common.close")} />
+    </ModalShell>
   );
 }

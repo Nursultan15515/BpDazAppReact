@@ -1,25 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
 import FormControl from "@mui/joy/FormControl";
 import FormHelperText from "@mui/joy/FormHelperText";
 import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
-import Modal from "@mui/joy/Modal";
-import ModalClose from "@mui/joy/ModalClose";
-import ModalDialog from "@mui/joy/ModalDialog";
 import Option from "@mui/joy/Option";
 import Select from "@mui/joy/Select";
 import Textarea from "@mui/joy/Textarea";
 import Typography from "@mui/joy/Typography";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import {
@@ -34,6 +28,10 @@ import { formatPhone, isPhoneComplete } from "../../app/phone";
 import { createRequest } from "../../app/requests.api";
 import { useDebouncedValue } from "../../app/useDebouncedValue";
 import { findVisitorByIin } from "../../app/visitors.api";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalShell } from "../../components/ModalShell";
 import { PhoneInput } from "../../components/PhoneInput";
 import { SectionCard } from "../../components/SectionCard";
 import { isoDate, nowTime } from "./helpers";
@@ -52,11 +50,11 @@ const MinHostQueryLength = 2;
 
 export function CreateRequestDialog({ open, onClose, onCreated }: Props) {
   return (
-    <Modal open={open} onClose={onClose}>
-      {/* Joy Modal размонтирует содержимое при закрытии, поэтому форма
+    <ModalShell open={open} onClose={onClose} width={780}>
+      {/* Содержимое размонтируется при закрытии, поэтому форма
           каждый раз открывается пустой без ручного сброса состояния. */}
-      <CreateRequestForm onClose={onClose} onCreated={onCreated} />
-    </Modal>
+      {open && <CreateRequestForm onClose={onClose} onCreated={onCreated} />}
+    </ModalShell>
   );
 }
 
@@ -94,6 +92,9 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
   const [personsFor, setPersonsFor] = useState<string | null>(null);
   const [organizationsFor, setOrganizationsFor] = useState<string | null>(null);
 
+  /** Пользователь сам тронул поле принимающего — подстановку по умолчанию отменяем. */
+  const hostTouched = useRef(false);
+
   const [iinSearching, setIinSearching] = useState(false);
   const [iinNotice, setIinNotice] = useState<string | null>(null);
 
@@ -105,8 +106,10 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
     getBuildings().then(setBuildings).catch(() => setBuildings([]));
 
     // Принимающий по умолчанию — сам пользователь, как ViewBag.DefaultHostPerson.
+    // Если пользователь успел начать выбирать сам, подстановку не делаем:
+    // иначе поздний ответ затрёт то, что он уже набрал.
     getCurrentPerson()
-      .then((person) => { if (person) applyHost(person); })
+      .then((person) => { if (person && !hostTouched.current) applyHost(person); })
       .catch(() => { });
   }, []);
 
@@ -247,11 +250,13 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
   };
 
   return (
-    <ModalDialog sx={{ width: 760, maxWidth: "95vw", maxHeight: "90vh" }}>
-      <ModalClose />
-      <DialogTitle>{t("create.title")}</DialogTitle>
-      <Divider />
-      <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
+    <>
+      <ModalHeader
+        icon={<PersonAddAlt1RoundedIcon />}
+        title={t("create.title")}
+        busy={saving || iinSearching}
+      />
+      <ModalBody>
         {error && <Alert color="danger" variant="soft">{error}</Alert>}
         {iinNotice && !error && <Alert color="success" variant="soft">{iinNotice}</Alert>}
 
@@ -364,8 +369,15 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
               value={host}
               getOptionLabel={(option) => option.fio}
               isOptionEqualToValue={(option, value) => option.id === value.id}
-              onChange={(_, value) => applyHost(value)}
-              onInputChange={(_, value) => setHostQuery(value)}
+              onChange={(_, value) => {
+                hostTouched.current = true;
+                applyHost(value);
+              }}
+              onInputChange={(_, value, reason) => {
+                // reason "reset" — это программная установка значения, не ввод пользователя.
+                if (reason !== "reset") hostTouched.current = true;
+                setHostQuery(value);
+              }}
               renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.id}>
                   <Box>
@@ -406,16 +418,13 @@ function CreateRequestForm({ onClose, onCreated }: Omit<Props, "open">) {
             <Input value={form.hostPhone} onChange={(e) => set("hostPhone", e.target.value)} />
           </FormControl>
         </SectionCard>
-      </DialogContent>
-      <Divider />
-      <DialogActions>
-        <Button onClick={handleSubmit} loading={saving}>
-          {t("create.submit")}
-        </Button>
-        <Button variant="plain" color="neutral" onClick={onClose} disabled={saving}>
-          {t("common.cancel")}
-        </Button>
-      </DialogActions>
-    </ModalDialog>
+      </ModalBody>
+      <ModalFooter
+        onCancel={onClose}
+        onConfirm={handleSubmit}
+        confirmLabel={t("create.submit")}
+        loading={saving}
+      />
+    </>
   );
 }

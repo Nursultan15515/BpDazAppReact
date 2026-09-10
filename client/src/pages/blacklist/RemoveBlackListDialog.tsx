@@ -1,16 +1,15 @@
 import { useState } from "react";
 import Alert from "@mui/joy/Alert";
-import Button from "@mui/joy/Button";
-import DialogActions from "@mui/joy/DialogActions";
-import DialogContent from "@mui/joy/DialogContent";
-import DialogTitle from "@mui/joy/DialogTitle";
-import Divider from "@mui/joy/Divider";
-import Modal from "@mui/joy/Modal";
-import ModalDialog from "@mui/joy/ModalDialog";
-import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import Typography from "@mui/joy/Typography";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
 import { removeFromBlackList } from "../../app/blacklist.api";
+import { ModalBody } from "../../components/ModalBody";
+import { ModalFooter } from "../../components/ModalFooter";
+import { ModalHeader } from "../../components/ModalHeader";
+import { ModalGradient } from "../../components/modalGradients";
+import { ModalShell } from "../../components/ModalShell";
 
 interface Props {
   entryId: number | null;
@@ -39,26 +38,24 @@ export function RemoveBlackListDialog({ entryId, onClose, onRemoved }: Props) {
   };
 
   return (
-    <Modal open={entryId !== null} onClose={onClose}>
-      <ModalDialog variant="outlined" role="alertdialog" sx={{ maxWidth: 440 }}>
-        <DialogTitle>
-          <WarningRoundedIcon color="warning" />
-          {t("blacklist.removeTitle", { id: entryId ?? "" })}
-        </DialogTitle>
-        <Divider />
-        <DialogContent>
-          {t("blacklist.removeText")}
-          {error && <Alert color="danger" variant="soft" sx={{ mt: 2 }}>{error}</Alert>}
-        </DialogContent>
-        <DialogActions>
-          <Button color="danger" onClick={handleRemove} loading={removing}>
-            {t("common.delete")}
-          </Button>
-          <Button variant="plain" color="neutral" onClick={onClose} disabled={removing}>
-            {t("common.cancel")}
-          </Button>
-        </DialogActions>
-      </ModalDialog>
-    </Modal>
+    <ModalShell open={entryId !== null} onClose={onClose} width={480}>
+      <ModalHeader
+        icon={<DeleteOutlineRoundedIcon />}
+        title={t("blacklist.removeTitle", { id: entryId ?? "" })}
+        gradient={ModalGradient.danger}
+        busy={removing}
+      />
+      <ModalBody>
+        <Typography level="body-sm">{t("blacklist.removeText")}</Typography>
+        {error && <Alert color="danger" variant="soft">{error}</Alert>}
+      </ModalBody>
+      <ModalFooter
+        onCancel={onClose}
+        onConfirm={handleRemove}
+        confirmLabel={t("common.delete")}
+        confirmColor="danger"
+        loading={removing}
+      />
+    </ModalShell>
   );
 }

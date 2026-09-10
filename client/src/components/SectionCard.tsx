@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Sheet from "@mui/joy/Sheet";
+import { Paper } from "@mui/material";
 import Typography from "@mui/joy/Typography";
 import Box from "@mui/joy/Box";
 
@@ -13,10 +13,14 @@ interface Props {
   children: ReactNode;
 }
 
+/** Блок внутри модального окна — оформление как в PassBureau. */
 export function SectionCard({ title, columns = 2, children }: Props) {
   return (
-    <Sheet variant="outlined" sx={{ borderRadius: "sm", p: 2 }}>
-      <Typography level="title-sm" sx={{ mb: 1.5 }}>
+    <Paper
+      variant="outlined"
+      sx={{ p: 2.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}
+    >
+      <Typography level="title-md" sx={{ mb: 1.5 }}>
         {title}
       </Typography>
       <Box
@@ -28,6 +32,15 @@ export function SectionCard({ title, columns = 2, children }: Props) {
       >
         {children}
       </Box>
-    </Sheet>
+    </Paper>
+  );
+}
+
+/** Строка «подпись: значение» внутри блока — та же вёрстка, что в PassBureau. */
+export function SectionRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <Typography level="body-sm" sx={{ mb: 0.5 }}>
+      <strong>{label}:</strong> {value || "—"}
+    </Typography>
   );
 }
