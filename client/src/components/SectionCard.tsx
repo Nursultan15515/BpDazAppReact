@@ -36,11 +36,43 @@ export function SectionCard({ title, columns = 2, children }: Props) {
   );
 }
 
-/** Строка «подпись: значение» внутри блока — та же вёрстка, что в PassBureau. */
-export function SectionRow({ label, value }: { label: string; value?: string | null }) {
+interface RowProps {
+  label: string;
+  value?: string | null;
+  /** Растянуть на несколько колонок сетки SectionCard. */
+  span?: number;
+}
+
+/**
+ * Строка «подпись — значение» в столбик: приглушённая подпись сверху, значение
+ * под ней. Подпись оформлена как в мета-блоке карточки пропуска PassBureau,
+ * а выделено здесь значение, а не подпись — так строка читается сверху вниз.
+ * Пустое значение остаётся бледным, чтобы заполненные поля выделялись.
+ */
+export function SectionRow({ label, value, span }: RowProps) {
+  const filled = Boolean(value);
+
   return (
-    <Typography level="body-sm" sx={{ mb: 0.5 }}>
-      <strong>{label}:</strong> {value || "—"}
-    </Typography>
+    <Box sx={{ minWidth: 0, ...(span ? { gridColumn: `span ${span}` } : null) }}>
+      <Typography
+        sx={{
+          fontSize: "10px",
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          color: "text.tertiary",
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        level="body-sm"
+        fontWeight={filled ? 600 : 400}
+        textColor={filled ? "text.primary" : "text.tertiary"}
+        sx={{ wordBreak: "break-word" }}
+      >
+        {value || "—"}
+      </Typography>
+    </Box>
   );
 }

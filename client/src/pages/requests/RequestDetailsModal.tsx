@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { Paper } from "@mui/material";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import CircularProgress from "@mui/joy/CircularProgress";
-import Typography from "@mui/joy/Typography";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
@@ -12,7 +10,7 @@ import { ModalBody } from "../../components/ModalBody";
 import { ModalFooter } from "../../components/ModalFooter";
 import { ModalHeader } from "../../components/ModalHeader";
 import { ModalShell } from "../../components/ModalShell";
-import { SectionRow } from "../../components/SectionCard";
+import { SectionCard, SectionRow } from "../../components/SectionCard";
 
 interface Props {
   requestId: number | null;
@@ -31,16 +29,11 @@ function formatDay(day: string): string {
   return parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : day;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <Paper
-      variant="outlined"
-      sx={{ p: 2.5, borderRadius: 2, bgcolor: "grey.50", border: "1px solid", borderColor: "grey.200" }}
-    >
-      <Typography level="title-md" sx={{ mb: 1 }}>{title}</Typography>
-      {children}
-    </Paper>
-  );
+/** Момент оформления — без секунд, как в карточках PassBureau. */
+function formatMoment(value: string): string {
+  return new Date(value).toLocaleString("ru-RU", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 }
 
 export function RequestDetailsModal({ requestId, onClose }: Props) {
@@ -89,14 +82,16 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
 
         {details && (
           <>
-            <Section title={t("details.visitorSection")}>
-              <SectionRow label={t("details.fullname")} value={fullname} />
+            {/* Строки идут в столбик, поэтому раскладываем их в две колонки —
+                иначе карточка вытягивается вдвое и уезжает под скролл. */}
+            <SectionCard title={t("details.visitorSection")}>
+              <SectionRow label={t("details.fullname")} value={fullname} span={2} />
               <SectionRow label={t("details.iin")} value={details.iin} />
-              <SectionRow label={t("details.organization")} value={details.organization} />
               <SectionRow label={t("details.mobilePhone")} value={details.mobilePhone} />
-            </Section>
+              <SectionRow label={t("details.organization")} value={details.organization} span={2} />
+            </SectionCard>
 
-            <Section title={t("details.visitSection")}>
+            <SectionCard title={t("details.visitSection")}>
               <SectionRow label={t("details.day")} value={formatDay(details.day)} />
               <SectionRow label={t("details.time")} value={`${details.timeFrom} - ${details.timeTo}`} />
               <SectionRow label={t("details.host")} value={details.hostPersonName} />
@@ -104,9 +99,9 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
               <SectionRow label={t("details.building")} value={details.hostPlace} />
               <SectionRow label={t("details.place")} value={details.place} />
               <SectionRow label={t("details.card")} value={details.cardNumber} />
-              <SectionRow label={t("details.createdAt")} value={new Date(details.date).toLocaleString()} />
-              <SectionRow label={t("details.purpose")} value={details.objective} />
-            </Section>
+              <SectionRow label={t("details.createdAt")} value={formatMoment(details.date)} />
+              <SectionRow label={t("details.purpose")} value={details.objective} span={2} />
+            </SectionCard>
           </>
         )}
       </ModalBody>
