@@ -18,6 +18,8 @@ public partial class VcEntities : DbContext
 
     public virtual DbSet<Department> Departments { get; set; }
 
+    public virtual DbSet<DocumentFile> DocumentFiles { get; set; }
+
     public virtual DbSet<FailedLogonAttempt> FailedLogonAttempts { get; set; }
 
     public virtual DbSet<Person> Persons { get; set; }
@@ -126,6 +128,24 @@ public partial class VcEntities : DbContext
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)
                 .HasConstraintName("FK_Departments_Departments");
+        });
+
+        modelBuilder.Entity<DocumentFile>(entity =>
+        {
+            entity.ToTable("DocumentFiles");
+            entity.HasKey(e => e.Id);
+            // Ключ — nchar(32): GUID без дефисов, добитый пробелами до длины.
+            entity.Property(e => e.Id)
+                .HasMaxLength(32)
+                .IsFixedLength()
+                .HasColumnName("ID");
+            entity.Property(e => e.FileLocation).HasMaxLength(250);
+            entity.Property(e => e.ContentType).HasMaxLength(50);
+            entity.Property(e => e.DateCreate).HasColumnType("datetime");
+            entity.Property(e => e.ParentId)
+                .HasMaxLength(32)
+                .IsFixedLength()
+                .HasColumnName("ParentID");
         });
 
         modelBuilder.Entity<FailedLogonAttempt>(entity =>

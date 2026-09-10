@@ -48,6 +48,13 @@ export interface RequestDetails {
   place: string;
   cardNumber: string | null;
   status: RequestStatus;
+  /** Код фото в DocumentFiles. Пусто — снимка на посту не делали. */
+  photoId: string | null;
+}
+
+/** Адрес фото посетителя по заявке. 404, если снимка нет. */
+export function requestPhotoUrl(id: number): string {
+  return `/api/requests/${id}/photo`;
 }
 
 export interface CreateRequestForm {

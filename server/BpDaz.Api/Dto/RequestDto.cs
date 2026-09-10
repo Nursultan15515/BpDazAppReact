@@ -58,7 +58,12 @@ public record RequestDetails(
     string HostPlace,
     string Place,
     string? CardNumber,
-    RequestStatus Status);
+    RequestStatus Status,
+    /// <summary>Код фото из DocumentFiles. Пусто — снимка нет, блок покажет заглушку.</summary>
+    string? PhotoId);
+
+/// <summary>Файл фото посетителя из DocumentFiles.</summary>
+public record VisitorPhoto(byte[] Content, string ContentType);
 
 /// <summary>Итог создания заявки: либо карточка, либо отказ из-за чёрного списка.</summary>
 public record CreateRequestResult(RequestDetails? Details, bool VisitorBlacklisted);

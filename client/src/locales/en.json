@@ -84,6 +84,8 @@
     "card": "Card number",
     "status": "Status",
     "createdAt": "Created",
+    "photo": "Visitor photo",
+    "noPhoto": "No photo",
     "loadError": "Failed to load the request"
   },
   "create": {

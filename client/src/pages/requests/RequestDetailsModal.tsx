@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
 import CircularProgress from "@mui/joy/CircularProgress";
+import Typography from "@mui/joy/Typography";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import { useTranslation } from "react-i18next";
 import { getErrorMessage } from "../../app/api";
-import { getRequest, type RequestDetails } from "../../app/requests.api";
+import { getRequest, requestPhotoUrl, type RequestDetails } from "../../app/requests.api";
 import { ModalBody } from "../../components/ModalBody";
 import { ModalFooter } from "../../components/ModalFooter";
 import { ModalHeader } from "../../components/ModalHeader";
@@ -34,6 +36,57 @@ function formatMoment(value: string): string {
   return new Date(value).toLocaleString("ru-RU", {
     day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
   });
+}
+
+/** Ширина снимка; пропорция 3:4 — как 135×180 в BpDazApp и 160×213 в PassBureau. */
+const PhotoWidth = 160;
+
+/**
+ * Фото посетителя, снятое на посту при выдаче карты. Пустой photoId означает,
+ * что снимка нет, — тогда запрос не отправляем вовсе. Ошибку загрузки тоже
+ * показываем заглушкой: файл может лежать на диске, а не в таблице.
+ */
+function VisitorPhoto({ requestId, photoId }: { requestId: number; photoId: string | null }) {
+  const { t } = useTranslation();
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <Box
+      sx={{
+        width: PhotoWidth,
+        aspectRatio: "3 / 4",
+        borderRadius: 2,
+        overflow: "hidden",
+        border: "1px solid",
+        borderColor: "divider",
+        bgcolor: "background.level1",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 0.5,
+        flexShrink: 0,
+        alignSelf: "flex-end",
+      }}
+    >
+      {photoId && !failed ? (
+        <Box
+          component="img"
+          src={requestPhotoUrl(requestId)}
+          alt={t("details.photo")}
+          onError={() => setFailed(true)}
+          sx={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      ) : (
+        <>
+          <PersonOutlineRoundedIcon sx={{ fontSize: 40, color: "text.disabled" }} />
+          <Typography level="body-xs" textColor="text.tertiary">
+            {t("details.noPhoto")}
+          </Typography>
+        </>
+      )}
+    </Box>
+  );
 }
 
 export function RequestDetailsModal({ requestId, onClose }: Props) {
@@ -82,14 +135,25 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
 
         {details && (
           <>
-            {/* Строки идут в столбик, поэтому раскладываем их в две колонки —
-                иначе карточка вытягивается вдвое и уезжает под скролл. */}
-            <SectionCard title={t("details.visitorSection")}>
-              <SectionRow label={t("details.fullname")} value={fullname} span={2} />
-              <SectionRow label={t("details.iin")} value={details.iin} />
-              <SectionRow label={t("details.mobilePhone")} value={details.mobilePhone} />
-              <SectionRow label={t("details.organization")} value={details.organization} span={2} />
-            </SectionCard>
+            {/* Данные посетителя и его фото стоят рядом — вёрстка из VisitorDetailModal
+                PassBureau. Строки внутри идут в столбик, поэтому раскладываем их в две
+                колонки: иначе карточка вытягивается вдвое и уезжает под скролл. */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
+                gap: 1.5,
+              }}
+            >
+              <SectionCard title={t("details.visitorSection")}>
+                <SectionRow label={t("details.fullname")} value={fullname} span={2} />
+                <SectionRow label={t("details.iin")} value={details.iin} />
+                <SectionRow label={t("details.mobilePhone")} value={details.mobilePhone} />
+                <SectionRow label={t("details.organization")} value={details.organization} span={2} />
+              </SectionCard>
+
+              <VisitorPhoto key={details.id} requestId={details.id} photoId={details.photoId} />
+            </Box>
 
             <SectionCard title={t("details.visitSection")}>
               <SectionRow label={t("details.day")} value={formatDay(details.day)} />

@@ -16,6 +16,9 @@ public interface IRequestService
 
     Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct);
 
+    /// <summary>Фото посетителя по заявке. Null — снимка нет.</summary>
+    Task<VisitorPhoto?> GetPhotoAsync(int requestId, CancellationToken ct);
+
     /// <summary>
     /// Создаёт заявку. Если посетитель в чёрном списке, заявка не создаётся
     /// и возвращается результат с VisitorBlacklisted = true.

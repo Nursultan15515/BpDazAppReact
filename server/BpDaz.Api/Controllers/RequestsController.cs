@@ -25,6 +25,13 @@ public class RequestsController(IRequestService requests) : ControllerBase
     public async Task<ActionResult<RequestDetails>> GetById(int id, CancellationToken ct) =>
         await requests.GetByIdAsync(id, ct) is { } details ? Ok(details) : NotFound();
 
+    /// <summary>Фото посетителя, снятое на посту при выдаче карты.</summary>
+    [HttpGet("{id:int}/photo")]
+    public async Task<IActionResult> GetPhoto(int id, CancellationToken ct) =>
+        await requests.GetPhotoAsync(id, ct) is { } photo
+            ? File(photo.Content, photo.ContentType)
+            : NotFound();
+
     [HttpPost]
     public async Task<ActionResult<RequestDetails>> Create(CreateRequestForm form, CancellationToken ct)
     {

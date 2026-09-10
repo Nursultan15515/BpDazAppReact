@@ -29,6 +29,7 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         public DateTime? ExitTime { get; init; }
         public bool HasVisit { get; init; }
         public string? CardNumber { get; init; }
+        public string? PhotoId { get; init; }
     }
 
     public async Task<PagedResult<RequestListItem>> GetListAsync(
@@ -91,6 +92,37 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         var row = await BaseQuery().FirstOrDefaultAsync(r => r.Request.Id == id, ct);
 
         return row == null ? null : ToDetails(row);
+    }
+
+    /// <summary>
+    /// Фото посетителя по заявке. Повторяет GetVisitorPhoto из BpDazApp, но
+    /// отсутствие снимка отдаёт как null, а не картинкой-заглушкой: иначе браузер
+    /// закеширует пустышку и её не отличить от настоящего фото.
+    /// </summary>
+    public async Task<VisitorPhoto?> GetPhotoAsync(int requestId, CancellationToken ct)
+    {
+        var photoId = await db.Visits.AsNoTracking()
+            .Where(v => v.RequestId == requestId && v.DocumentFilesId != null)
+            .OrderByDescending(v => v.Id)
+            .Select(v => v.DocumentFilesId)
+            .FirstOrDefaultAsync(ct);
+
+        if (string.IsNullOrWhiteSpace(photoId))
+            return null;
+
+        var file = await db.DocumentFiles.AsNoTracking()
+            .Where(f => f.Id == photoId)
+            .Select(f => new { f.Blob, f.ContentType, f.StoredInTable, f.FileLocation })
+            .FirstOrDefaultAsync(ct);
+
+        // Файл может лежать на диске (FileLocation вида «aspdoc:…») — такие записи
+        // мы прочитать не можем, поэтому честно отвечаем «фото нет».
+        if (file?.Blob == null || file.Blob.Length == 0)
+            return null;
+
+        return new VisitorPhoto(
+            file.Blob,
+            string.IsNullOrEmpty(file.ContentType) ? "image/jpeg" : file.ContentType);
     }
 
     public async Task<CreateRequestResult> CreateAsync(CreateRequestForm form, CancellationToken ct)
@@ -205,6 +237,10 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
             HasVisit = db.Visits.Any(v => v.RequestId == request.Id),
             CardNumber = db.Visits.Where(v => v.RequestId == request.Id)
                 .OrderByDescending(v => v.Id).Select(v => v.CardReadableNum).FirstOrDefault(),
+            // Снимок делают на посту при выдаче карты, поэтому он висит на визите,
+            // а не на посетителе — как PhotoID в RequestInfo у BpDazApp.
+            PhotoId = db.Visits.Where(v => v.RequestId == request.Id)
+                .OrderByDescending(v => v.Id).Select(v => v.DocumentFilesId).FirstOrDefault(),
         };
 
     private async Task<Visitor> AddOrUpdateVisitorAsync(CreateRequestForm form, CancellationToken ct)
@@ -280,7 +316,9 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         row.Building ?? "",
         row.Request.Place ?? row.HostPerson?.Place ?? "",
         row.CardNumber,
-        GetStatus(row));
+        GetStatus(row),
+        // nchar(32) читается добитым пробелами — обрезаем, иначе ссылка не сойдётся.
+        row.PhotoId?.TrimEnd());
 
     private static string FullName(Person? person) => person == null
         ? ""
