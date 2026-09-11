@@ -1,13 +1,12 @@
 import type { RequestStatus } from "../../app/requests.api";
+import type { KendoLabelColor } from "../../components/kendoTable";
 
-type ChipColor = "primary" | "neutral" | "success" | "warning" | "danger";
-
-export const statusColor: Record<RequestStatus, ChipColor> = {
-  Default: "neutral",
+export const statusColor: Record<RequestStatus, KendoLabelColor> = {
+  Default: "default",
   Decorated: "primary",
   Current: "success",
   Overdue: "danger",
-  Done: "neutral",
+  Done: "default",
   CardTaken: "warning",
 };
 

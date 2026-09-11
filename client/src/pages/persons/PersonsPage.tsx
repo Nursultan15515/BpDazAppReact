@@ -2,14 +2,15 @@ import { useCallback, useState } from "react";
 import { TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
-import Chip from "@mui/joy/Chip";
 import Typography from "@mui/joy/Typography";
 import { useTranslation } from "react-i18next";
 import { getPersons, type PersonListItem } from "../../app/persons.api";
 import { useLoad } from "../../app/useLoad";
 import { usePageState } from "../../app/usePageState";
+import { KendoLabel } from "../../components/KendoLabel";
 import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
+import { TableEmptyRow } from "../../components/TableEmptyRow";
 import { TablePanel } from "../../components/TablePanel";
 import { AddPersonDialog } from "./AddPersonDialog";
 
@@ -66,43 +67,23 @@ export default function PersonsPage() {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} hover>
+              <TableCell>{row.fio}</TableCell>
+              <TableCell>{row.departmentName}</TableCell>
+              <TableCell>{row.positionName}</TableCell>
               <TableCell>
-                <Typography level="body-sm" fontWeight={600}>{row.fio}</Typography>
+                {row.place ? `${row.buildingName}, ${row.place}` : row.buildingName}
               </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.departmentName}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.positionName}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {row.place ? `${row.buildingName}, ${row.place}` : row.buildingName}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {row.phoneInternal || t("common.notSet")}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {row.email || t("common.notSet")}
-                </Typography>
-              </TableCell>
+              <TableCell>{row.phoneInternal || t("common.notSet")}</TableCell>
+              <TableCell>{row.email || t("common.notSet")}</TableCell>
               <TableCell>
                 {row.login
-                  ? <Chip size="sm" variant="soft" color="primary">{row.login}</Chip>
-                  : <Typography level="body-sm" textColor="text.tertiary">{t("common.notSet")}</Typography>}
+                  ? <KendoLabel color="primary">{row.login}</KendoLabel>
+                  : t("common.notSet")}
               </TableCell>
             </TableRow>
           ))}
           {rows.length === 0 && !loading && (
-            <TableRow>
-              <TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>
-                {t("persons.noData")}
-              </TableCell>
-            </TableRow>
+            <TableEmptyRow colSpan={7} text={t("persons.noData")} />
           )}
         </TableBody>
       </TablePanel>

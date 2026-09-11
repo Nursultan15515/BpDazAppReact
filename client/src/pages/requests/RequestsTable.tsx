@@ -8,8 +8,6 @@ import {
   TableRow,
 } from "@mui/material";
 import Box from "@mui/joy/Box";
-import Chip from "@mui/joy/Chip";
-import Typography from "@mui/joy/Typography";
 import IconButton from "@mui/joy/IconButton";
 import Stack from "@mui/joy/Stack";
 import CircularProgress from "@mui/joy/CircularProgress";
@@ -18,6 +16,9 @@ import Tooltip from "@mui/joy/Tooltip";
 import { useTranslation } from "react-i18next";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import type { RequestListItem } from "../../app/requests.api";
+import { KendoLabel } from "../../components/KendoLabel";
+import { TableEmptyRow } from "../../components/TableEmptyRow";
+import { kendoPanelSx, kendoTableSx } from "../../components/kendoTable";
 import { statusColor } from "./helpers";
 
 interface Props {
@@ -48,6 +49,7 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen }: Props) {
         minHeight: 0,
         overflow: "hidden",
         position: "relative",
+        ...kendoPanelSx,
       }}
     >
       {loading && (
@@ -56,17 +58,19 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen }: Props) {
         />
       )}
       <TableContainer sx={{ flex: 1, overflow: "auto" }}>
-        {/* Колонок много, поэтому ужимаем горизонтальные отступы ячеек —
+        {/* Колонок много, поэтому таблице задан минимум по ширине —
             иначе последняя колонка с действиями уезжает за край. */}
-        <Table size="small" stickyHeader sx={{ minWidth: 1000, "& td, & th": { px: 1 } }}>
+        <Table size="small" stickyHeader sx={{ minWidth: 1100, ...kendoTableSx }}>
           <TableHead>
             <TableRow>
               <TableCell sx={{ width: 64 }}>{t("requests.colId")}</TableCell>
               <TableCell>{t("requests.colVisitor")}</TableCell>
               <TableCell sx={{ width: 115 }}>{t("requests.colIin")}</TableCell>
               <TableCell>{t("requests.colBuilding")}</TableCell>
-              <TableCell sx={{ width: 150 }}>{t("requests.colPeriod")}</TableCell>
-              <TableCell sx={{ width: 150 }}>{t("requests.colEnterExit")}</TableCell>
+              {/* 170px — ширина колонки «Период» из кендо-грида BpDazApp.
+                  «Вход - выход» держит такую же дату, поэтому ширина та же. */}
+              <TableCell sx={{ width: 170 }}>{t("requests.colPeriod")}</TableCell>
+              <TableCell sx={{ width: 170 }}>{t("requests.colEnterExit")}</TableCell>
               <TableCell>{t("requests.colDepartment")}</TableCell>
               <TableCell>{t("requests.colHost")}</TableCell>
               <TableCell>{t("requests.colAuthor")}</TableCell>
@@ -76,46 +80,28 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen }: Props) {
           </TableHead>
           <TableBody>
             {rows.map((row) => (
+              // Текст в ячейках однотонный, без выделения ФИО и приглушённых
+              // колонок: в кендо-гриде все значения шли одним начертанием.
               <TableRow key={row.id} hover>
+                <TableCell>{row.id}</TableCell>
+                <TableCell>{row.visitorName}</TableCell>
+                <TableCell>{row.visitorIin || t("common.notSet")}</TableCell>
                 <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">{row.id}</Typography>
+                  {row.place ? `${row.targetBuilding}, ${row.place}` : row.targetBuilding}
                 </TableCell>
+                <TableCell>{row.period}</TableCell>
+                <TableCell>{row.enterExitTime || t("common.notSet")}</TableCell>
+                <TableCell>{row.hostDepartment}</TableCell>
+                <TableCell>{row.hostPersonName}</TableCell>
+                <TableCell>{row.makerName}</TableCell>
                 <TableCell>
-                  <Typography level="body-sm" fontWeight={600}>{row.visitorName}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm">{row.visitorIin || t("common.notSet")}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">
-                    {row.place ? `${row.targetBuilding}, ${row.place}` : row.targetBuilding}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">{row.period}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">
-                    {row.enterExitTime || t("common.notSet")}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">{row.hostDepartment}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">{row.hostPersonName}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography level="body-sm" textColor="text.secondary">{row.makerName}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip size="sm" variant="soft" color={statusColor[row.status]}>
+                  <KendoLabel color={statusColor[row.status]}>
                     {t(`status.${row.status}`)}
-                  </Chip>
+                  </KendoLabel>
                 </TableCell>
                 {/* Удаление живёт в карточке, как в BpDazApp: оно доступно
                     не для всякого статуса, а список статуса кнопки не знает. */}
-                <TableCell align="right" sx={{ pr: 1 }}>
+                <TableCell align="right">
                   <Stack direction="row" justifyContent="flex-end">
                     <Tooltip title={t("requests.view")}>
                       <IconButton size="sm" variant="plain" color="neutral" onClick={() => onRowOpen(row)}>
@@ -127,11 +113,7 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen }: Props) {
               </TableRow>
             ))}
             {rows.length === 0 && !loading && (
-              <TableRow>
-                <TableCell colSpan={11} align="center" sx={{ py: 6, color: "text.secondary" }}>
-                  {t("requests.noData")}
-                </TableCell>
-              </TableRow>
+              <TableEmptyRow colSpan={11} text={t("requests.noData")} />
             )}
           </TableBody>
         </Table>

@@ -13,6 +13,7 @@ import { useLoad } from "../../app/useLoad";
 import { usePageState } from "../../app/usePageState";
 import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
+import { TableEmptyRow } from "../../components/TableEmptyRow";
 import { TablePanel } from "../../components/TablePanel";
 import { AddBlackListDialog } from "./AddBlackListDialog";
 import { RemoveBlackListDialog } from "./RemoveBlackListDialog";
@@ -74,32 +75,14 @@ export default function BlackListPage() {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} hover>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.id}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm">{row.iin || t("common.notSet")}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" fontWeight={600}>{row.lastname}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.firstname}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {row.middleName || t("common.notSet")}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {new Date(row.createdDate).toLocaleDateString()}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.createdBy}</Typography>
-              </TableCell>
-              <TableCell align="right" sx={{ pr: 1 }}>
+              <TableCell>{row.id}</TableCell>
+              <TableCell>{row.iin || t("common.notSet")}</TableCell>
+              <TableCell>{row.lastname}</TableCell>
+              <TableCell>{row.firstname}</TableCell>
+              <TableCell>{row.middleName || t("common.notSet")}</TableCell>
+              <TableCell>{new Date(row.createdDate).toLocaleDateString()}</TableCell>
+              <TableCell>{row.createdBy}</TableCell>
+              <TableCell align="right">
                 <Stack direction="row" justifyContent="flex-end">
                   <Tooltip title={t("blacklist.remove")}>
                     <IconButton size="sm" variant="plain" color="danger" onClick={() => setRemoveId(row.id)}>
@@ -111,11 +94,7 @@ export default function BlackListPage() {
             </TableRow>
           ))}
           {rows.length === 0 && !loading && (
-            <TableRow>
-              <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
-                {t("blacklist.noData")}
-              </TableCell>
-            </TableRow>
+            <TableEmptyRow colSpan={8} text={t("blacklist.noData")} />
           )}
         </TableBody>
       </TablePanel>

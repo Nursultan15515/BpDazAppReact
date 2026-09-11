@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import Alert from "@mui/joy/Alert";
 import Box from "@mui/joy/Box";
-import Chip from "@mui/joy/Chip";
 import IconButton from "@mui/joy/IconButton";
 import Stack from "@mui/joy/Stack";
 import Tooltip from "@mui/joy/Tooltip";
@@ -12,8 +11,10 @@ import { useTranslation } from "react-i18next";
 import { getUsers, type UserListItem } from "../../app/users.api";
 import { useLoad } from "../../app/useLoad";
 import { usePageState } from "../../app/usePageState";
+import { KendoLabel } from "../../components/KendoLabel";
 import { Pagination } from "../../components/Pagination";
 import { SearchToolbar } from "../../components/SearchToolbar";
+import { TableEmptyRow } from "../../components/TableEmptyRow";
 import { TablePanel } from "../../components/TablePanel";
 import { EditUserDialog } from "./EditUserDialog";
 
@@ -68,29 +69,17 @@ export default function UsersPage() {
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id} hover>
+              <TableCell>{row.id}</TableCell>
+              <TableCell>{row.fio || t("common.notSet")}</TableCell>
+              <TableCell>{row.login || t("common.notSet")}</TableCell>
+              <TableCell>{row.accountName || t("common.notSet")}</TableCell>
+              <TableCell>{row.departmentName}</TableCell>
               <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.id}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" fontWeight={600}>{row.fio || t("common.notSet")}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm">{row.login || t("common.notSet")}</Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">
-                  {row.accountName || t("common.notSet")}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography level="body-sm" textColor="text.secondary">{row.departmentName}</Typography>
-              </TableCell>
-              <TableCell>
-                <Chip size="sm" variant="soft" color={row.isAdmin ? "primary" : "neutral"}>
+                <KendoLabel color={row.isAdmin ? "primary" : "default"}>
                   {row.isAdmin ? t("users.roleAdmin") : t("users.roleUser")}
-                </Chip>
+                </KendoLabel>
               </TableCell>
-              <TableCell align="right" sx={{ pr: 1 }}>
+              <TableCell align="right">
                 <Stack direction="row" justifyContent="flex-end">
                   <Tooltip title={t("users.edit")}>
                     <IconButton size="sm" variant="plain" color="neutral" onClick={() => setEditId(row.id)}>
@@ -102,11 +91,7 @@ export default function UsersPage() {
             </TableRow>
           ))}
           {rows.length === 0 && !loading && (
-            <TableRow>
-              <TableCell colSpan={7} align="center" sx={{ py: 6, color: "text.secondary" }}>
-                {t("users.noData")}
-              </TableCell>
-            </TableRow>
+            <TableEmptyRow colSpan={7} text={t("users.noData")} />
           )}
         </TableBody>
       </TablePanel>
