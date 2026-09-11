@@ -5,6 +5,7 @@ import FormLabel from "@mui/joy/FormLabel";
 import Input from "@mui/joy/Input";
 import { useTranslation } from "react-i18next";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import type { RequestFilterMode } from "../../app/requests.api";
 
@@ -14,11 +15,13 @@ interface Props {
   dateTo: string;
   search: string;
   loading: boolean;
+  exporting: boolean;
   onModeChange: (v: RequestFilterMode) => void;
   onDateFromChange: (v: string) => void;
   onDateToChange: (v: string) => void;
   onSearchChange: (v: string) => void;
   onApply: () => void;
+  onExport: () => void;
   onCreate: () => void;
 }
 
@@ -31,8 +34,8 @@ const modeLabelKey: Record<RequestFilterMode, string> = {
 };
 
 export function RequestsToolbar({
-  mode, dateFrom, dateTo, search, loading,
-  onModeChange, onDateFromChange, onDateToChange, onSearchChange, onApply, onCreate,
+  mode, dateFrom, dateTo, search, loading, exporting,
+  onModeChange, onDateFromChange, onDateToChange, onSearchChange, onApply, onExport, onCreate,
 }: Props) {
   const { t } = useTranslation();
 
@@ -86,7 +89,18 @@ export function RequestsToolbar({
         {t("requests.apply")}
       </Button>
 
-      <Box sx={{ ml: "auto", alignSelf: "flex-end" }}>
+      <Box sx={{ ml: "auto", alignSelf: "flex-end", display: "flex", gap: 1 }}>
+        <Button
+          size="sm"
+          variant="outlined"
+          color="neutral"
+          loading={exporting}
+          startDecorator={<FileDownloadOutlinedIcon fontSize="small" />}
+          onClick={onExport}
+        >
+          {t("requests.export")}
+        </Button>
+
         <Button
           size="sm"
           color="success"

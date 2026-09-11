@@ -5,7 +5,9 @@ import Snackbar from "@mui/joy/Snackbar";
 import Typography from "@mui/joy/Typography";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { useTranslation } from "react-i18next";
+import { getErrorMessage } from "../../app/api";
 import {
+  exportRequests,
   getRequests,
   type RequestFilterMode,
   type RequestListItem,
@@ -54,6 +56,8 @@ export default function RequestsPage({ onlyMine = false }: Props) {
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   // Всплывающее подтверждение — замена iaoAlert из BpDazApp.
   const [toast, setToast] = useState<string | null>(null);
 
@@ -71,6 +75,19 @@ export default function RequestsPage({ onlyMine = false }: Props) {
 
   const rows = data?.items ?? noRows;
   const reload = () => setReloadToken((token) => token + 1);
+
+  // Выгружается вся выборка по фильтрам, поэтому page и pageSize не передаём.
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+    try {
+      await exportRequests({ mode, dateFrom, dateTo, onlyMine, search: appliedSearch });
+    } catch (e) {
+      setExportError(getErrorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 2, p: 2 }}>
@@ -98,17 +115,21 @@ export default function RequestsPage({ onlyMine = false }: Props) {
           setPeriod(draftPeriod);
           firstPage();
         }}
+        exporting={exporting}
+        onExport={handleExport}
         onCreate={() => setCreateOpen(true)}
       />
 
       {error && <Alert color="danger" variant="soft">{t("requests.loadError")}: {error}</Alert>}
+      {exportError && (
+        <Alert color="danger" variant="soft">{t("requests.exportError")}: {exportError}</Alert>
+      )}
 
       <RequestsTable
         rows={rows}
         loading={loading}
         hasData={loadedOnce}
         onRowOpen={(row) => setDetailsId(row.id)}
-        onRowDelete={(row) => setDeleteId(row.id)}
       />
 
       <Pagination
@@ -120,13 +141,19 @@ export default function RequestsPage({ onlyMine = false }: Props) {
         onPageSizeChange={changePageSize}
       />
 
-      <RequestDetailsModal requestId={detailsId} onClose={() => setDetailsId(null)} />
+      <RequestDetailsModal
+        requestId={detailsId}
+        onClose={() => setDetailsId(null)}
+        onDelete={setDeleteId}
+      />
 
       <DeleteRequestDialog
         requestId={deleteId}
         onClose={() => setDeleteId(null)}
         onDeleted={() => {
           setDeleteId(null);
+          // Карточку тоже закрываем: пропуска, который в ней открыт, больше нет.
+          setDetailsId(null);
           setToast(t("requests.deleted"));
           stepBackIfEmptied(rows.length);
           reload();

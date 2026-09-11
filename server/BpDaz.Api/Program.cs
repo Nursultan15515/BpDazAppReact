@@ -141,6 +141,8 @@ builder.Services.AddScoped<IPersonService, PersonService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBlackListService, BlackListService>();
 
+builder.Services.Configure<BuildingOptions>(builder.Configuration.GetSection("Buildings"));
+
 // ─── ГБДФЛ ───────────────────────────────────────────────────────────────────
 var gbdfl = builder.Configuration.GetSection("Gbdfl");
 builder.Services.Configure<GbdflOptions>(gbdfl);

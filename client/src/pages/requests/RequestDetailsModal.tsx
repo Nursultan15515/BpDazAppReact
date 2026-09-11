@@ -18,6 +18,8 @@ import { SectionCard, SectionRow } from "../../components/SectionCard";
 interface Props {
   requestId: number | null;
   onClose: () => void;
+  /** Запрос на удаление — подтверждение показывает отдельное окно. */
+  onDelete: (id: number) => void;
 }
 
 interface LoadedState {
@@ -96,7 +98,7 @@ function VisitorPhoto({ requestId, photoId }: { requestId: number; photoId: stri
   );
 }
 
-export function RequestDetailsModal({ requestId, onClose }: Props) {
+export function RequestDetailsModal({ requestId, onClose, onDelete }: Props) {
   const { t } = useTranslation();
   const [loaded, setLoaded] = useState<LoadedState | null>(null);
 
@@ -145,15 +147,17 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
                 {/* Пропорции оригинала (10+2, 8+4) держались на рамках инпутов;
                     у нас значения короткие, и разные отступы читаются ступеньками.
                     Поэтому здесь одна пара колонок на все ряды. */}
+                {/* Слева ИИН и ФИО по порядку, справа — всё остальное о посетителе.
+                    Сетка идёт по рядам, поэтому порядок детей: левое, правое, левое… */}
                 <SectionCard title={t("create.visitorSection")}>
                   <SectionRow label={t("create.iin")} value={details.iin} />
                   <SectionRow label={t("details.createdAt")} value={formatMoment(details.date)} />
                   <SectionRow label={t("create.lastname")} value={details.lastname} />
+                  <SectionRow label={t("create.organization")} value={details.organization} />
                   <SectionRow label={t("create.firstname")} value={details.firstname} />
+                  <SectionRow label={t("create.mobilePhone")} value={details.mobilePhone} />
                   <SectionRow label={t("create.middleName")} value={details.middleName} />
                   <SectionRow label={t("details.card")} value={details.cardNumber} />
-                  <SectionRow label={t("create.organization")} value={details.organization} />
-                  <SectionRow label={t("create.mobilePhone")} value={details.mobilePhone} />
                 </SectionCard>
               </Box>
 
@@ -180,7 +184,19 @@ export function RequestDetailsModal({ requestId, onClose }: Props) {
         )}
       </ModalBody>
 
-      <ModalFooter onCancel={onClose} cancelLabel={t("common.close")} />
+      {/* «Удалить пропуск» показываем только когда сервер это разрешает —
+          в BpDazApp кнопка была лишь при статусах «Оформлен» и «Просрочен». */}
+      {details?.canDelete ? (
+        <ModalFooter
+          onCancel={onClose}
+          cancelLabel={t("common.close")}
+          onConfirm={() => onDelete(details.id)}
+          confirmLabel={t("requests.delete")}
+          confirmColor="danger"
+        />
+      ) : (
+        <ModalFooter onCancel={onClose} cancelLabel={t("common.close")} />
+      )}
     </ModalShell>
   );
 }

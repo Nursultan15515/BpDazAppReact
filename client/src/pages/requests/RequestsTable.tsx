@@ -17,7 +17,6 @@ import LinearProgress from "@mui/joy/LinearProgress";
 import Tooltip from "@mui/joy/Tooltip";
 import { useTranslation } from "react-i18next";
 import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import type { RequestListItem } from "../../app/requests.api";
 import { statusColor } from "./helpers";
 
@@ -26,10 +25,9 @@ interface Props {
   loading: boolean;
   hasData: boolean;
   onRowOpen: (row: RequestListItem) => void;
-  onRowDelete: (row: RequestListItem) => void;
 }
 
-export function RequestsTable({ rows, loading, hasData, onRowOpen, onRowDelete }: Props) {
+export function RequestsTable({ rows, loading, hasData, onRowOpen }: Props) {
   const { t } = useTranslation();
 
   if (loading && !hasData) {
@@ -73,7 +71,7 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen, onRowDelete }
               <TableCell>{t("requests.colHost")}</TableCell>
               <TableCell>{t("requests.colAuthor")}</TableCell>
               <TableCell sx={{ width: 125 }}>{t("requests.colStatus")}</TableCell>
-              <TableCell sx={{ width: 76 }} />
+              <TableCell sx={{ width: 48 }} />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -115,16 +113,13 @@ export function RequestsTable({ rows, loading, hasData, onRowOpen, onRowDelete }
                     {t(`status.${row.status}`)}
                   </Chip>
                 </TableCell>
+                {/* Удаление живёт в карточке, как в BpDazApp: оно доступно
+                    не для всякого статуса, а список статуса кнопки не знает. */}
                 <TableCell align="right" sx={{ pr: 1 }}>
                   <Stack direction="row" justifyContent="flex-end">
                     <Tooltip title={t("requests.view")}>
                       <IconButton size="sm" variant="plain" color="neutral" onClick={() => onRowOpen(row)}>
                         <VisibilityRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={t("requests.delete")}>
-                      <IconButton size="sm" variant="plain" color="danger" onClick={() => onRowDelete(row)}>
-                        <DeleteOutlineRoundedIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                   </Stack>

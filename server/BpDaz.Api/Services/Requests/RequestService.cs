@@ -44,6 +44,49 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
     {
         var (currentPage, size) = Paging.Normalize(page, pageSize);
 
+        var query = FilteredQuery(mode, dateFrom, dateTo, onlyMine, search);
+
+        // Счёт по отфильтрованной выборке — до среза страницы.
+        var totalCount = await query.CountAsync(ct);
+
+        var rows = await query
+            .OrderByDescending(r => r.Request.Id)
+            .Skip((currentPage - 1) * size)
+            .Take(size)
+            .ToListAsync(ct);
+
+        return new PagedResult<RequestListItem>(
+            [.. rows.Select(ToListItem)], totalCount, currentPage, size);
+    }
+
+    public async Task<IReadOnlyList<RequestListItem>> GetAllAsync(
+        RequestFilterMode mode,
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        bool onlyMine,
+        string? search,
+        CancellationToken ct)
+    {
+        // Без Skip/Take: выгрузка берёт всю отфильтрованную выборку, а не страницу —
+        // как AllPages(true) у Kendo-грида в BpDazApp.
+        var rows = await FilteredQuery(mode, dateFrom, dateTo, onlyMine, search)
+            .OrderByDescending(r => r.Request.Id)
+            .ToListAsync(ct);
+
+        return [.. rows.Select(ToListItem)];
+    }
+
+    /// <summary>
+    /// Общий фильтр списка и выгрузки. Держим его одним методом, чтобы в Excel
+    /// не уехало не то, что видно на экране.
+    /// </summary>
+    private IQueryable<RequestRow> FilteredQuery(
+        RequestFilterMode mode,
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        bool onlyMine,
+        string? search)
+    {
         var from = dateFrom?.ToDateTime(TimeOnly.MinValue)
             ?? DateTime.Today.AddDays(-DefaultPeriodDays);
         var to = dateTo?.ToDateTime(new TimeOnly(23, 59, 59))
@@ -74,17 +117,7 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
                 || (r.Maker != null && (r.Maker.Fio ?? "").Contains(text)));
         }
 
-        // Счёт по отфильтрованной выборке — до среза страницы.
-        var totalCount = await query.CountAsync(ct);
-
-        var rows = await query
-            .OrderByDescending(r => r.Request.Id)
-            .Skip((currentPage - 1) * size)
-            .Take(size)
-            .ToListAsync(ct);
-
-        return new PagedResult<RequestListItem>(
-            [.. rows.Select(ToListItem)], totalCount, currentPage, size);
+        return query;
     }
 
     public async Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct)
@@ -144,6 +177,13 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         var hostPerson = await db.Persons.FirstOrDefaultAsync(p => p.Id == form.HostPersonId, ct)
             ?? throw new InvalidOperationException($"Сотрудник {form.HostPersonId} не найден.");
 
+        // Кабинет возвращается в карточку сотрудника — строка hostPerson.Place = data.Place
+        // из PostRequest у BpDazApp. Так поправленный однажды кабинет подставляется
+        // во все следующие заявки к этому человеку.
+        var place = form.Place?.Trim();
+        if (!string.IsNullOrEmpty(place) && hostPerson.Place != place)
+            hostPerson.Place = place;
+
         var hostCompanyId = await db.Departments
             .Where(d => d.Id == hostPerson.DepartmentId)
             .Select(d => (int?)d.CompanyId)
@@ -164,7 +204,10 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
             VisitorId = visitor.Id,
             VisitsToEnd = 1,
             PlaceId = form.PlaceId,
-            Place = form.Place,
+            // BpDazApp сюда кабинет не писал вовсе, из-за чего колонка «Кабинет»
+            // в списке всегда пустовала. Пишем — чтобы в заявке остался тот кабинет,
+            // который был указан на момент визита, даже если сотрудник переедет.
+            Place = place,
             Objective = form.Purpose,
             SignDate = DateTime.Now,
             Decision = 1,
@@ -185,27 +228,35 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         return new CreateRequestResult(details, VisitorBlacklisted: false);
     }
 
-    public async Task<bool> DeleteAsync(int id, CancellationToken ct)
-    {
-        var request = await db.Requests.FirstOrDefaultAsync(r => r.Id == id, ct);
-        if (request == null)
-            return false;
+    /// <summary>
+    /// Удалять можно только пропуск, по которому посетитель ещё не пришёл:
+    /// в BpDazApp кнопка «Удалить пропуск» рисовалась лишь при статусах
+    /// «Оформлен» и «Просрочен». Там проверка жила только во вьюхе — здесь она
+    /// на сервере, потому что DELETE доступен и напрямую.
+    /// </summary>
+    public static bool CanDelete(RequestStatus status) =>
+        status is RequestStatus.Decorated or RequestStatus.Overdue;
 
-        var alreadyDeleted = await db.RequestDeleteInfos.AnyAsync(d => d.RequestId == id, ct);
-        if (alreadyDeleted)
-            return false;
+    public async Task<DeleteRequestResult> DeleteAsync(int id, CancellationToken ct)
+    {
+        var row = await BaseQuery().FirstOrDefaultAsync(r => r.Request.Id == id, ct);
+        if (row == null)
+            return DeleteRequestResult.NotFound;
+
+        if (!CanDelete(GetStatus(row)))
+            return DeleteRequestResult.StatusForbids;
 
         // Строку заявки не трогаем — удаление мягкое, через журнал RequestDeleteInfo.
         db.RequestDeleteInfos.Add(new RequestDeleteInfo
         {
             RequestId = id,
-            VisitorId = request.VisitorId,
+            VisitorId = row.Request.VisitorId,
             UserId = currentUser.UserId,
             CreatedDate = DateTime.Now,
         });
 
         await db.SaveChangesAsync(ct);
-        return true;
+        return DeleteRequestResult.Ok;
     }
 
     private IQueryable<RequestRow> BaseQuery() =>
@@ -318,7 +369,8 @@ public class RequestService(VcEntities db, ICurrentUser currentUser, IBlackListS
         row.CardNumber,
         GetStatus(row),
         // nchar(32) читается добитым пробелами — обрезаем, иначе ссылка не сойдётся.
-        row.PhotoId?.TrimEnd());
+        row.PhotoId?.TrimEnd(),
+        CanDelete(GetStatus(row)));
 
     private static string FullName(Person? person) => person == null
         ? ""

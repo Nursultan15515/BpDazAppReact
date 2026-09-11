@@ -21,6 +21,21 @@ public class RequestsController(IRequestService requests) : ControllerBase
         [FromQuery] int pageSize = Paging.DefaultPageSize)
         => Ok(await requests.GetListAsync(mode, dateFrom, dateTo, onlyMine, search, page, pageSize, ct));
 
+    /// <summary>Выгрузка списка в Excel. Отдаёт всю выборку по текущим фильтрам.</summary>
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(
+        CancellationToken ct,
+        [FromQuery] RequestFilterMode mode = RequestFilterMode.All,
+        [FromQuery] DateOnly? dateFrom = null,
+        [FromQuery] DateOnly? dateTo = null,
+        [FromQuery] bool onlyMine = false,
+        [FromQuery] string? search = null)
+    {
+        var rows = await requests.GetAllAsync(mode, dateFrom, dateTo, onlyMine, search, ct);
+
+        return File(RequestsExcel.Build(rows), RequestsExcel.ContentType, RequestsExcel.FileName);
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<RequestDetails>> GetById(int id, CancellationToken ct) =>
         await requests.GetByIdAsync(id, ct) is { } details ? Ok(details) : NotFound();
@@ -50,6 +65,21 @@ public class RequestsController(IRequestService requests) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct) =>
-        await requests.DeleteAsync(id, ct) ? NoContent() : NotFound();
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    {
+        var result = await requests.DeleteAsync(id, ct);
+
+        return result switch
+        {
+            DeleteRequestResult.Ok => NoContent(),
+            DeleteRequestResult.StatusForbids => Conflict(new ProblemDetails
+            {
+                Title = "Пропуск нельзя удалить",
+                Detail = "Удалить можно только оформленный или просроченный пропуск — "
+                    + "по этому посетитель уже получил карту или прошёл в здание.",
+                Status = StatusCodes.Status409Conflict,
+            }),
+            _ => NotFound(),
+        };
+    }
 }

@@ -2,10 +2,12 @@ using BpDaz.Api.Data;
 using BpDaz.Api.Dto;
 using BpDaz.Api.Infrastructure.CurrentUser;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace BpDaz.Api.Services.Dicts;
 
-public class DictService(VcEntities db, ICurrentUser currentUser) : IDictService
+public class DictService(VcEntities db, ICurrentUser currentUser, IOptions<BuildingOptions> buildings)
+    : IDictService
 {
     private const int MaxSuggestions = 20;
 
@@ -51,12 +53,31 @@ public class DictService(VcEntities db, ICurrentUser currentUser) : IDictService
     }
 
     /// <summary>Здание — площадка верхнего уровня; вложенные помещения сюда не попадают.</summary>
-    public async Task<IReadOnlyList<BuildingOption>> GetBuildingsAsync(CancellationToken ct) =>
-        await db.Places.AsNoTracking()
-            .Where(p => p.ParentId == null)
-            .OrderBy(p => p.Title)
+    public async Task<IReadOnlyList<BuildingOption>> GetBuildingsAsync(CancellationToken ct)
+    {
+        var allowed = buildings.Value.Ids;
+
+        if (allowed.Length == 0)
+        {
+            return await db.Places.AsNoTracking()
+                .Where(p => p.ParentId == null)
+                .OrderBy(p => p.Title)
+                .Select(p => new BuildingOption(p.Id, p.Name ?? p.Title))
+                .ToListAsync(ct);
+        }
+
+        var found = await db.Places.AsNoTracking()
+            .Where(p => allowed.Contains(p.Id))
             .Select(p => new BuildingOption(p.Id, p.Name ?? p.Title))
             .ToListAsync(ct);
+
+        // Порядок задаёт конфигурация, а не база: в BpDazApp здания шли в том
+        // порядке, в каком были выписаны в разметке.
+        return [.. allowed
+            .Select(id => found.FirstOrDefault(b => b.Id == id))
+            .Where(b => b is not null)
+            .Select(b => b!)];
+    }
 
     public async Task<IReadOnlyList<DepartmentOption>> GetDepartmentsAsync(CancellationToken ct) =>
         await db.Departments.AsNoTracking()

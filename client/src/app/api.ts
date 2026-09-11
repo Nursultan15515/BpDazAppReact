@@ -43,6 +43,36 @@ async function apiFetch<T>(url: string, options: RequestInit | undefined, isRetr
   return data as T;
 }
 
+/**
+ * Скачивание файла. Отдельно от api(), потому что ответ бинарный, а ошибку
+ * сервер всё равно присылает как ProblemDetails.
+ */
+export async function apiDownload(url: string, fileName: string): Promise<void> {
+  let res = await fetch(url, { credentials: "include" });
+
+  if (res.status === 401 && await tryRefresh()) {
+    res = await fetch(url, { credentials: "include" });
+  }
+
+  if (!res.ok) {
+    const ct = res.headers.get("content-type") ?? "";
+    const data = ct.includes("json")
+      ? await res.json().catch(() => undefined)
+      : await res.text().catch(() => undefined);
+
+    throw { status: res.status, data } as ApiError;
+  }
+
+  const blobUrl = URL.createObjectURL(await res.blob());
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(blobUrl);
+}
+
 async function tryRefresh(): Promise<boolean> {
   try {
     const res = await fetch("/api/auth/refresh", {

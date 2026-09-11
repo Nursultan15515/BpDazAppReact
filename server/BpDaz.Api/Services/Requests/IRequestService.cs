@@ -14,6 +14,15 @@ public interface IRequestService
         int pageSize,
         CancellationToken ct);
 
+    /// <summary>Вся отфильтрованная выборка без пагинации — для выгрузки в Excel.</summary>
+    Task<IReadOnlyList<RequestListItem>> GetAllAsync(
+        RequestFilterMode mode,
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        bool onlyMine,
+        string? search,
+        CancellationToken ct);
+
     Task<RequestDetails?> GetByIdAsync(int id, CancellationToken ct);
 
     /// <summary>Фото посетителя по заявке. Null — снимка нет.</summary>
@@ -25,5 +34,6 @@ public interface IRequestService
     /// </summary>
     Task<CreateRequestResult> CreateAsync(CreateRequestForm form, CancellationToken ct);
 
-    Task<bool> DeleteAsync(int id, CancellationToken ct);
+    /// <summary>Мягкое удаление пропуска. Разрешено только до прихода посетителя.</summary>
+    Task<DeleteRequestResult> DeleteAsync(int id, CancellationToken ct);
 }

@@ -38,6 +38,8 @@
     "dateTo": "Date to",
     "apply": "Apply",
     "create": "New request",
+    "export": "Export to Excel",
+    "exportError": "Failed to export the list",
     "noData": "No requests found",
     "loadError": "Failed to load requests",
     "colId": "No.",
@@ -51,12 +53,12 @@
     "colAuthor": "Author",
     "colStatus": "Status",
     "view": "Details",
-    "delete": "Delete request",
-    "deleteTitle": "Delete request No. {{id}}?",
+    "delete": "Delete pass",
+    "deleteTitle": "Delete pass No. {{id}}?",
     "deleteText": "The request will disappear from the list. This cannot be undone.",
-    "deleteError": "Failed to delete the request",
+    "deleteError": "Failed to delete the pass",
     "created": "Request created",
-    "deleted": "Request deleted"
+    "deleted": "Pass deleted"
   },
   "status": {
     "Default": "—",

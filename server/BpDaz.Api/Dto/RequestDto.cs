@@ -15,6 +15,15 @@ public enum RequestStatus
     CardTaken = 5
 }
 
+/// <summary>Итог удаления пропуска.</summary>
+public enum DeleteRequestResult
+{
+    Ok,
+    NotFound,
+    /// <summary>Статус не позволяет удалять — посетитель уже пришёл или отработан.</summary>
+    StatusForbids
+}
+
 /// <summary>Вкладки списка: все / в здании / покинувшие.</summary>
 public enum RequestFilterMode
 {
@@ -60,7 +69,9 @@ public record RequestDetails(
     string? CardNumber,
     RequestStatus Status,
     /// <summary>Код фото из DocumentFiles. Пусто — снимка нет, блок покажет заглушку.</summary>
-    string? PhotoId);
+    string? PhotoId,
+    /// <summary>Разрешено ли удалять пропуск. Правило считает сервер, чтобы оно не двоилось.</summary>
+    bool CanDelete);
 
 /// <summary>Файл фото посетителя из DocumentFiles.</summary>
 public record VisitorPhoto(byte[] Content, string ContentType);

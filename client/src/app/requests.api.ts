@@ -1,4 +1,4 @@
-import { api } from "./api";
+import { api, apiDownload } from "./api";
 import { appendPaging, type PagedResult } from "./paging";
 
 /** Совпадает с RequestStatus на бэкенде. */
@@ -50,6 +50,8 @@ export interface RequestDetails {
   status: RequestStatus;
   /** Код фото в DocumentFiles. Пусто — снимка на посту не делали. */
   photoId: string | null;
+  /** Разрешено ли удалять пропуск. Правило считает сервер. */
+  canDelete: boolean;
 }
 
 /** Адрес фото посетителя по заявке. 404, если снимка нет. */
@@ -95,6 +97,24 @@ export function getRequests(params: RequestListParams): Promise<PagedResult<Requ
   appendPaging(query, params.page, params.pageSize);
 
   return api<PagedResult<RequestListItem>>(`/api/requests?${query}`);
+}
+
+/**
+ * Выгружает список в Excel. Пагинация сюда не передаётся: в файл уходит вся
+ * выборка по текущим фильтрам — как AllPages(true) у грида BpDazApp.
+ */
+export function exportRequests(
+  params: Omit<RequestListParams, "page" | "pageSize">
+): Promise<void> {
+  const query = new URLSearchParams({
+    mode: params.mode,
+    dateFrom: params.dateFrom,
+    dateTo: params.dateTo,
+    onlyMine: String(params.onlyMine),
+    search: params.search,
+  });
+
+  return apiDownload(`/api/requests/export?${query}`, "Список посетителей.xlsx");
 }
 
 export function getRequest(id: number): Promise<RequestDetails> {
